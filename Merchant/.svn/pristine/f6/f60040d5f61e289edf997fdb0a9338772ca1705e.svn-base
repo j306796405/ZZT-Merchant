@@ -1,0 +1,298 @@
+<div data-ng-if="module.isModuleLoad">
+  <form name="infoForm" novalidate ng-submit="vm._saveForm(infoForm)">
+    <!--商品基本信息-->
+    <div class="enter-wrapper" data-ng-init="info = product.delivery.info">
+      <p class="mt20">
+        是否保税区商品：
+        <label class="mr20"><input type="radio" name="areaType" ng-value="1" class="table-check check-element"
+                                   data-ng-model="info.areaType" data-ng-checked="!!info.baCode">是</label>
+        <label class="mr20"><input type="radio" name="areaType" ng-value="0" class="table-check check-element"
+                                   data-ng-model="info.areaType" data-ng-checked="!info.baCode">否</label>
+        <select class="select-tab mr15"
+                data-ng-if="info.areaType"
+                data-ng-model="info.baCode"
+                data-ng-options="select.baCode as select.name for select in vm.select.bonedArea">
+          <option value="">请选择</option>
+        </select>
+      </p>
+      <h1 class="review-title">商品基本信息</h1>
+      <div class="pro-msg">
+        <p class="mt20">
+          <label>
+            商品分类：
+            {{product.delivery.info.pcFirstName}} > {{product.delivery.info.pcSecondName}} >
+            {{product.delivery.info.pcThirdName}}
+          </label>
+        </p>
+        <p class="mt20">
+          <label>
+            品牌名称：
+            {{product.delivery.info.brandName}}
+          </label>
+        </p>
+        <p class="mt20">
+          <label>商品名称：
+            <input type="text" data-ng-model="product.delivery.info.name">
+          </label>
+        </p>
+
+        <p class="mt20">
+          <label class="desc-label long">
+            商品卖点：
+            <textarea data-ng-model="product.delivery.info.summary"></textarea>
+          </label>
+        </p>
+
+        <p>
+          <label>商品编号：
+            <span>{{product.delivery.info.psCode}}</span>
+          </label>
+        </p>
+      </div>
+    </div>
+    <!--商品规格-->
+    <div class="enter-wrapper"
+         data-ng-init="classSpecifications = product.delivery.classSpecifications; productSpecifications = product.delivery.productSpecifications; specificationsObjects = product.delivery.specificationsObjects">
+      <h1 class="review-title">商品规格</h1>
+      <div class="J_specifications_checkbox_wrap">
+            <span class="J_specifications_checkbox_item"
+                  data-ng-repeat="item in classSpecifications track by $index">
+                <label class="check-label mr20">
+                    <input type="checkbox" class="table-check check-element mr5" disabled
+                           data-ng-true-value="true"
+                           data-ng-false-value="false"
+                           data-ng-model="item.isChecked">
+                    {{item.name}}
+                </label>
+            </span>
+      </div>
+      <ul>
+        <li
+          data-ng-if="item.isChecked"
+          data-ng-repeat="item in classSpecifications track by item.ppId"
+          data-ng-init="outerIndex = $index;">
+          <span class="f12 format-title">{{item.name}}</span>
+          <div class="format mt10 clearfix">
+                        <span data-ng-repeat="info in item.values track by $index"
+                              data-ng-init="info.ppName = item.name; info.ppId = item.ppId;">
+                            <label data-ng-if="!info.index">
+                                <input type="checkbox" name="{{'ppid-' + item.ppId}}" class="table-check check-element"
+                                       data-ng-true-value="true"
+                                       data-ng-false-value="false"
+                                       data-ng-init="info.isGlobal = 1; isDisabled = info.isChecked; info.pvName = info.name;"
+                                       data-ng-model="info.isChecked"
+                                       data-ng-disabled="isDisabled"
+                                       data-ng-change="vm._renderMatrix(classSpecifications, specificationsObjects, outerIndex, $index, info)">
+                                 {{info.name}}
+                            </label>
+                            <label data-ng-if="info.index">
+                                <input type="checkbox" name="{{'ppid-' + item.ppId}}" class="table-check"
+                                       data-ng-value="info"
+                                       data-ng-true-value="true"
+                                       data-ng-false-value="false"
+                                       data-ng-init="info.isGlobal = 0;"
+                                       data-ng-model="checkboxs[outerIndex][$index]"
+                                >
+                                <input type="text" class="size-fillin J_val"
+                                       data-ng-model="info.pvId"
+                                       data-ng-change="info.name = info.pvId"
+                                >
+                                <a href="javascript:void(0)" class="x"
+                                   data-ng-click="vm._removeSpecification(item.values, $index)">X
+                                </a>
+                            </label>
+                        </span>
+            <em class="add">
+              <a class="btn btn-success btn-sm" href="javascript:;"
+                 data-ng-click="vm._addEmptySpecification(item)">+添加</a>
+            </em>
+          </div>
+        </li>
+      </ul>
+      <table class="table table-hover">
+        <thead>
+        <tr>
+          <th
+            data-ng-repeat="item in classSpecifications track by item.ppId"
+            data-ng-if="item.isSelected">
+            {{ item.name }}
+          </th>
+          <th>当前商品规格</th>
+          <th>厂商指导价（元）</th>
+          <th>海关HS编码</th>
+          <th>净重（KG）</th>
+          <th>毛重（KG）</th>
+          <th>货号</th>
+          <th>条形码</th>
+          <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr
+          data-ng-repeat="row in productSpecifications track by $index"
+          data-ng-if="!!row.specifications && row.specifications.length"
+          data-ng-form="innerForm">
+          <td data-ng-repeat="item in row.specifications track by $index">
+            {{ item.pvName }}
+          </td>
+          <td>
+            <input type="radio" class="table-check" name="isCurrent" disabled
+                   data-ng-checked="row.isCurrent == 1"
+                   data-ng-click="vm._selectCurrentSpecifications(productSpecifications, $index)"
+            />
+          </td>
+          <td>
+            <input type="text" name="settleAmount"
+                   data-ng-model="row.settleAmount"
+                   data-ng-disabled="row.status === 0"
+                   required
+                   data-ng-pattern="/^[0-9]+([.]\d{1,2})?$/">
+            <p class="validate-err validate-w-67"
+               data-ng-if="innerForm.settleAmount.$invalid && (innerForm.settleAmount.$dirty || infoForm.$submitted)">
+              请输入数字并保留两位小数</p>
+          </td>
+          <td>
+            <input type="text" name="hsCode"
+                   data-ng-model="row.hsCode"
+                   data-ng-disabled="row.status === 0"
+                   required>
+            <p class="validate-err validate-w-67"
+               data-ng-if="innerForm.hsCode.$invalid && (innerForm.hsCode.$dirty || infoForm.$submitted)">
+              请输入海关HS编码</p>
+          </td>
+          <td>
+            <input type="text" name="netWeight"
+                   data-ng-model="row.netWeight"
+                   data-ng-disabled="row.status === 0"
+                   required
+                   ng-pattern="/^\d+(\.\d{1,4})?$/">
+            <p class="validate-err validate-w-67"
+               data-ng-if="innerForm.netWeight.$invalid && (innerForm.netWeight.$dirty || infoForm.$submitted)">
+              请输入数字并保留四位小数</p>
+          </td>
+          <td>
+            <input type="text" name="grossWeight"
+                   data-ng-model="row.grossWeight"
+                   data-ng-disabled="row.status === 0"
+                   data-ng-pattern="/^\d+(\.\d{1,4})?$/">
+            <p class="validate-err validate-w-67"
+               data-ng-if="innerForm.grossWeight.$invalid && (innerForm.grossWeight.$dirty || infoForm.$submitted)">
+              请输入数字并保留四位小数</p>
+          </td>
+          <td>
+            <input type="text" data-ng-model="row.prNo" data-ng-disabled="row.status === 0">
+          </td>
+          <td>
+            <input type="text" data-ng-model="row.barcode" data-ng-disabled="row.status === 0">
+          </td>
+          <td data-ng-if="row.status === 0"><a class="btn btn-success btn-sm" href="javascript:;"
+                                               data-ng-click="vm._modifySpecifications(row.psCode)">修改</a>
+          </td>
+          <td data-ng-if="row.status === 1">—</td>
+          <td data-ng-if="row.status === 2"><a class="btn btn-success btn-sm" href="javascript:;"
+                                               data-ng-click="vm._removeSpecifications(productSpecifications, $index)">删除</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!--商品图片-->
+    <div uploader-comp pics="product.delivery.pics"></div>
+
+    <!--商品属性-->
+    <div class="enter-wrapper">
+      <h1 class="review-title">商品属性</h1>
+      <div class="pro-property-wrap">
+        <ul class="pro-property-box clearfix" ng-repeat="group in product.delivery.attributes">
+          <li ng-show="($parent.$index % 3 == 0) && ($parent.$index + 3 > $index) && ($parent.$index <= $index)"
+              ng-repeat="attribute in product.delivery.attributes">
+            <!-- 0:单选 1:输入  2:多选 -->
+            <!--单选-->
+                <span data-ng-if="attribute.multiSelect == 0"
+                      data-ng-init="attribute.isText = 0;">
+                    <label class="key" data-required="{{attribute.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <select class="form-ele"
+                            ng-options="option.name for option in attribute.valuesTemp"
+                            ng-model="attribute.values[0]"
+                            ng-init="attribute.values[0] = (attribute.valuesTemp | selected);">
+                        <option value="">请选择</option>
+                    </select>
+                </span>
+            <!--文本输入框-->
+                <span
+                  data-ng-if="attribute.multiSelect == 1"
+                  data-ng-init="attribute.isText = 1">
+                    <label class="key" data-required="{{attribute.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <input type="text" class="form-ele input"
+                           ng-trim="true"
+                           data-ng-model="attribute.values[0].name">
+                </span>
+            <!--多选框-->
+                <span data-ng-if="attribute.multiSelect == 2"
+                      data-ng-init="attribute.isText = 0; attribute.isCheckbox = 1;">
+                    <label class="key" data-required="{{item.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <span class="checkgroup">
+                        <label data-ng-repeat="label in attribute.values">
+                            <input type="checkbox" class="table-check" name="{{'gourp-' + attribute.ppId}}"
+                                   data-ng-checked="{{label.select}}"
+                                   data-ng-true-value="1"
+                                   data-ng-false-value="0"
+                                   data-ng-model="attribute.values[$index].select">
+                            {{label.name}}
+                        </label>
+                    </span>
+                </span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!--商品参数-->
+    <div class="enter-wrapper">
+      <h1 class="review-title">商品参数
+        <a href="javascript:void(0)" class="parameter-btn"
+           data-ng-click="vm._addEmptyParameters(product.delivery.parameters)">自定义参数</a>
+      </h1>
+
+      <div class="J_parameter-box">
+        <span class="custom J_parameter-item"
+              data-ng-repeat="parameter in product.delivery.parameters track by $index">
+            <span data-ng-if="parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 1;">
+                <label class="J_key" data-required="{{parameter.required}}">
+                    <em class="star" data-ng-if="+parameter.required">*</em>{{parameter.ppName}}：
+                </label>
+                <input type="text" class="J_val" data-ng-model="parameter.pvName" ng-trim="true">
+            </span>
+            <span class="custom edit"
+                  data-ng-if="!parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 0">
+                <input type="text" class="J_key" placeholder="自定义参数" data-required="0" data-ng-model="parameter.ppName">：
+                <input type="text" class="J_val" placeholder="自定义参数值" data-ng-model="parameter.pvName" ng-trim="true">
+                <a href="javascript:void(0)" class="x"
+                   data-ng-click="vm._removeParameters(product.delivery.parameters, $index)">X</a>
+            </span>
+        </span>
+      </div>
+    </div>
+    <!--商品详情-->
+    <div class="enter-wrapper mb30">
+      <h1 class="review-title">商品详情</h1>
+      <div class="editor">
+        <div id="editor-trigger" ng-model="product.delivery.detailDesc" wang-editor="true" class="wang-editor"></div>
+      </div>
+    </div>
+
+    <div class="clearfix">
+      <button class="btn btn-success mr5 fr" type="button">预览</button>
+      <button class="btn btn-primary mr5 fr" type="submit" data-ng-click="vm._saveDelivery()">保存商品</button>
+    </div>
+  </form>
+</div>

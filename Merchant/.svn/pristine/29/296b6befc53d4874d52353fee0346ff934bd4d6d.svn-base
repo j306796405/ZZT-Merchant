@@ -1,0 +1,188 @@
+
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .factory('product.publish.publishNoDeliveryService', publishNoDeliveryService);
+    publishNoDeliveryService.$inject = [
+        '$log',
+        '$http',
+        '$q',
+        'comp.rest.restAccessor'
+    ];
+    function publishNoDeliveryService($log, $http, $q, restAccessor) {
+
+
+        var selectedSpecMatrix = [];
+
+        var src={};var selected={};
+
+        function setValue(vm){
+            src=vm.src;
+            selected=vm.selected;
+        }
+        /***
+         * 根据分类加载商品配置内容（规格,属性,参数等)
+         * @type {loadProductConfigureFunc}
+         */
+        function loadProductConfigureFunc(vm) {
+            setValue(vm);
+            $http.get("/app/business/product/publish/view/nodelivery.json").then(function (response) {
+                var data=response.data;
+                src.specifications = data.specifications;
+                src.properties = data.attributes;
+                src.parameters = data.parameters;
+                console.log("data=" + src);
+            }, function () {
+
+            });
+        }
+
+        /***
+         * 选择规格
+         * @type {selectSpecificationFunc}
+         */
+
+        function selectSpecificationFunc() {
+            var selectedSpec = [];
+            var selectedSpecIndex=selected.specifications.specIndexList;
+            /***
+             * 根据selectedSpecIndex的值（即选中的规格)）,过滤掉未选中的值,得到选中的规格的数组下标
+             */
+            for (var i = 0; i < selectedSpecIndex.length; i++) {
+                var value = selectedSpecIndex[i];
+                if (value != -1) selectedSpec.push(value);
+                //将下标从小到大排序
+                selectedSpec.sort(function (a, b) {
+                    return a - b;
+                });
+
+            }
+            // alert("selectedSpec="+selectedSpec);
+            /***
+             * 重置选中的规格数组,将选中的规格重新赋值到selectedSpecificationsVM里,实现页面动态刷新
+             * @type {Array}
+             */
+            var list=selected.specifications.list=[];
+            selectedSpecMatrix = [];
+            for (var j = 0; j < selectedSpec.length; j++) {
+                list.push(src.specifications[selectedSpec[j]]);
+                selectedSpecMatrix[j] = [];
+            }
+            // alert(vm.selectedSpecificationsVM.length);
+        }
+
+        // vm.checkOnSpecMatrix=checkOnSpecMatrixFunc;
+
+        function isSpecValueSelectedFunc(matrixIndex, pvId) {
+            console.log("isSpecValueSelected find index=" + selectedSpecMatrix[matrixIndex].indexOf(pvId));
+            return selectedSpecMatrix[matrixIndex].indexOf(pvId) >= 0;
+        }
+
+        this.updateSpecMatrix = updateSpecMatrixFunc;
+        function updateSpecMatrixFunc($event, matrixIndex, pvId) {
+            var checkbox = $event.target;
+            var action = (checkbox.checked ? 'add' : 'remove');
+            updateSelected(action, matrixIndex, pvId);
+        }
+
+        var updateSelected = function (action, matrixIndex, pvId) {
+            var foundIndex = selectedSpecMatrix[matrixIndex].indexOf(pvId);
+            if (action == 'add' && foundIndex == -1) {
+                selectedSpecMatrix[matrixIndex].push(pvId);
+                //$scope.selectedTags.push(name);
+            }
+            if (action == 'remove' && foundIndex != -1) {
+                selectedSpecMatrix[matrixIndex].splice(foundIndex, 1);
+                //$scope.selectedTags.splice(idx, 1);
+            }
+            console.log("selectedSpecMatrix[" + [matrixIndex] + "]=" + selectedSpecMatrix[matrixIndex]);
+            //["229:白色|228:S","240:深蓝色|228:S"]
+            //如果是两维规格以上,将更新规格矩阵
+            if(selectedSpecMatrix.length>1){
+                var matrixList = refreshSpecMatrix(selectedSpecMatrix);
+                var finalSpecMatrixList=selected.specifications.finalSpecMatrixList=[];
+                for(var i= 0,size=matrixList.length;i<size;i++){
+                    var rowSpec=matrixList[i].split("|");
+                    var rowSpecArray=new Array(0);
+                    for(var ii= 0,length=rowSpec.length;ii<length;ii++){
+                        var spec = {
+                            'name' : '',
+                            'pvid'  : ''
+                        };
+                        spec.pvid=rowSpec[ii].split(":")[0];
+                        spec.name=rowSpec[ii].split(":")[1];
+                        rowSpecArray.push(spec);
+                    }
+
+                    finalSpecMatrixList[i]=rowSpecArray;
+                }
+            }
+
+        }
+
+        function refreshSpecMatrix(doubleArrays) {
+            var len = doubleArrays.length;
+            if (len >= 2) {
+                var len1 = doubleArrays[0].length;
+                var len2 = doubleArrays[1].length;
+                var newlen = len1 * len2;
+                var temp = new Array(newlen);
+                var index = 0;
+                for (var i = 0; i < len1; i++) {
+                    for (var j = 0; j < len2; j++) {
+                        temp[index] = returnSpecValue(doubleArrays[0][i]) +"|"+ returnSpecValue(doubleArrays[1][j]);
+                        index++;
+                    }
+                }
+                var newArray = new Array(len - 1);
+                if (len > 2) {
+                    newArray[1] = doubleArrays[2];
+                }
+                newArray[0] = temp;
+                return refreshSpecMatrix(newArray);
+            } else {
+                return doubleArrays[0];
+            }
+
+        }
+
+        /***
+         * {
+          "pvid": "229",
+          "name": "白色"
+        }
+         */
+        function returnSpecValue(specValue){
+            return specValue.pvid+":"+specValue.name;
+        }
+
+        function commonGetFunc(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        return {
+            loadProductConfigure:loadProductConfigureFunc,
+            selectSpecification:selectSpecificationFunc,
+            isSpecValueSelected :isSpecValueSelectedFunc,
+            updateSpecMatrix:updateSpecMatrixFunc,
+            commonGet: commonGetFunc,
+            src:src,
+            selected:selected
+        };
+
+
+    }
+
+
+
+
+    /*****========NoDeliveryController end=========*****/
+})();

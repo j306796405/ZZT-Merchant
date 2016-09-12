@@ -1,0 +1,123 @@
+<div data-ng-controller="order.list.ListController">
+    <div class="select-area">
+        <em>
+            <label>下单时间段：</label>
+            <input type="date" name="startTime" id="startTime" placeholder="yyyy-MM-dd" min="2013-01-01"
+                   max="2020-12-31" ng-model="filter.startTime" class="mr5"/>-<input
+                type="date"
+                name="endTime"
+                id="endTime"
+                ng-model="filter.endTime"
+                class="ml5"/>
+        </em>
+                    <span>
+                        <label>商品名称：</label>
+                        <input type="text" name="name" id="name" ng-model="filter.name">
+                    </span>
+
+        <span class="last-line">
+            <label>是否入库：</label>
+            <select name="warehouse" id="warehouse" ng-model="filter.warehouse">
+                <option value="">请选择</option>
+                <option value="1">入库</option>
+                <option value="0">不入库</option>
+            </select>
+        </span>
+        <div>
+            <button type="button" class="btn btn-default mr5" data-ng-click="reset()">重置</button>
+            <button type="button" class="btn btn-success" data-ng-click="listData()">查询</button>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-heading navy-blue">
+            <tabs>
+                <pane ng-repeat="pane in panes" title="{{pane.title}}" total="{{pane.total}}"
+                      callback="query(pane.value)">
+                </pane>
+            </tabs>
+        </div>
+        <div class="panel-body whitebg pd20">
+            <div class="tab-content">
+                <div class="tab-pane active">
+                    <div class="alert-info">
+                        <ul class="order-title">
+                            <li class="order-product">商品信息</li>
+                            <li>售价</li>
+                            <li>数量</li>
+                            <li></li>
+                            <li>总金额</li>
+                            <li>交易状态</li>
+                            <li>操作</li>
+                        </ul>
+                    </div>
+                    <table class="table table-hover order-table" ng-repeat="order in data">
+                        <thead>
+                        <tr>
+                            <th colspan="7">
+                                <span class="mr20 fl">订单编号：{{order.soCode}}</span>
+                                <span class="fl">下单时间：{{order.createTime}}</span>
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="item in order.itemList">
+                            <td class="order-product">
+                                <img class="pro-img mr10" width="20%" src="../img/pro-pic.jpg" alt=""/>
+                                <div>
+                                    <p>{{item.pName}}</p>
+                                    <p data-ng-repeat=" spec in item.specifications">
+                                        {{spec.name}}：{{spec.value}}</p>
+                                    <p>税率：{{item.taxRate}}</p>
+                                </div>
+                            </td>
+                            <td>{{item.settleAmount}}</td>
+                            <td>{{item.rawQuantity}}</td>
+                            <td data-ng-if="$index==0" rowspan="{{order.itemList.length}}" class="rowspan"></td>
+                            <td data-ng-if="$index==0" rowspan="{{order.itemList.length}}" class="rowspan">
+                                {{order.totalSettleAmount}}
+                            </td>
+                            <td data-ng-if="$index==0" rowspan="{{order.itemList.length}}" class="rowspan">
+                                <p>等待付款</p>
+                                <a href="javascript:void(0)" data-ng-click="goToOrderDetail()" class="block">订单详情</a>
+                            </td>
+                            <td data-ng-if="$index==0" rowspan="{{order.itemList.length}}" class="rowspan">
+                                <button class="btn btn-danger btn-block deliver-btn" type="button">发货</button>
+
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <xc-pagination xhr-processing="xhrProcessing" pagination="pagination"/>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+<!--发货弹框-->
+<script type="text/ng-template" id="deliveryDialogId">
+    <div class="prompt" id="deliver">
+        <div class="mainbody ac">
+            <a class="close_btn" title="关闭窗口" href="javascript:;">×</a>
+            <label class="deliver-fillin">
+                <span>快递公司：</span>
+                <select>
+                    <option>请选择</option>
+                    <option>请选择</option>
+                    <option>请选择</option>
+                    <option>请选择</option>
+                </select>
+            </label>
+            <label class="deliver-fillin">
+                <span>运单号：</span>
+                <input type="text"/>
+            </label>
+            <div class="btnbox">
+                <button class="btn btn-success mr5" type="button">确 定</button>
+                <button class="btn btn-default easyDialogNoBtn" type="button">取 消</button>
+            </div>
+        </div>
+    </div>
+</script>

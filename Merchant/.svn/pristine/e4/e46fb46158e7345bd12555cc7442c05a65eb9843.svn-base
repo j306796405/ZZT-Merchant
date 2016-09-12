@@ -1,0 +1,78 @@
+/**!
+ * not-delivery.controller
+ * 创建非入仓商品控制器
+ * @author xiaodong.liu
+ * @create 2016-05-07 14:23
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.NotDeliveryController', NotDeliveryController)
+
+    NotDeliveryController.$inject = [
+        '$timeout',
+        '$state',
+        '$scope',
+        '$rootScope',
+        'product.publish.publishNoDeliveryService',
+        'comp.util.arrayUtil',
+        'settings',
+        'FileUploader',
+        'comp.notification.notificationService'
+    ];
+
+    function NotDeliveryController($timeout, $state, $scope, $rootScope, publishNoDeliveryService, arrayUtil, settings, FileUploader, notificationService) {
+        var vm = this;
+        vm.rest = {};
+        $scope.form = {};
+        vm.product = $scope.form.product = {
+            info: {},
+            productSpecifications: [],
+            properties: [],
+            parameters: [],
+            pics: [],
+            detailDesc: ''
+        }
+        var info={
+            "areaType":'',
+            "baCode":'',
+            "purchaseClass":'',
+            "brandCode":'',
+            "name":'',
+            "summary":''
+        };
+        vm.product.info=info;
+        vm.src ={};
+        vm.selected ={};
+
+        /***
+         * 根据分类加载商品配置内容（规格,属性,参数等)
+         * @type {loadProductConfigureFunc}
+         */
+        vm.loadProductConfigure = function () {
+            publishNoDeliveryService.loadProductConfigure();
+        }
+        vm.loadProductConfigure();
+        vm.src = publishNoDeliveryService.src;
+        vm.selected = publishNoDeliveryService.selected;
+
+        /***
+         * 选择规格
+         * @type {selectSpecificationFunc}
+         */
+        vm.selectSpecification = function () {
+            publishNoDeliveryService.selectSpecification();
+        }
+
+        vm.isSpecValueSelected = function(matrixIndex, pvId) {
+            return publishNoDeliveryService.isSpecValueSelected(matrixIndex, pvId)
+        }
+
+        vm.updateSpecMatrix =function updateSpecMatrixFunc($event, matrixIndex, pvId) {
+            publishNoDeliveryService.updateSpecMatrix($event, matrixIndex, pvId);
+        }
+    }
+
+})();

@@ -1,0 +1,138 @@
+<div data-ng-if="module.isModuleLoad">
+<!-- 统一设置库存/价格 -->
+    <div class="channel" data-ng-if="vm.isCommonSet">
+        <form name="unifiedForm" novalidate ng-submit="vm._unifiedForm(unifiedForm)">
+            <h1 class="review-title">
+                商品价格/库存<a class="channel-link" href="javascript:void(0)"
+                          data-ng-click="vm.isCommonSet = !vm.isCommonSet">分渠道设置价格/库存</a>
+            </h1>
+            <h4 class="sub-title">统一设置库存/价格</h4>
+            <table class="table table-hover validate-table">
+                <thead>
+                <tr>
+                    <th>市场价（元）</th>
+                    <th>销售价（元）</th>
+                    <th>销售库存</th>
+                    <th>限购数量</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <input type="text" name="marketAmount"
+                               ng-pattern="/^[0-9]+([.]\d{1,2})?$/"
+                               data-ng-model="product.purchase.unified.marketAmount">
+                        <p class="validate-err validate-w-67"
+                           data-ng-if="unifiedForm.marketAmount.$invalid && (unifiedForm.marketAmount.$dirty || unifiedForm.$submitted)">
+                            请输入数字并保留两位小数</p>
+                    </td>
+                    <td>
+                        <input type="text" data-ng-model="product.purchase.unified.sellPrice" name="sellPrice"
+                               required=""
+                               ng-pattern="/^[0-9]+([.]\d{1,2})?$/">
+                        <p class="validate-err validate-w-67"
+                           data-ng-if="unifiedForm.sellPrice.$invalid && (unifiedForm.sellPrice.$dirty || unifiedForm.$submitted)">
+                            请输入数字并保留两位小数</p>
+                    </td>
+                    <td>
+                        <input type="number" required="" data-ng-model="product.purchase.unified.sellNums"
+                               name="sellNums" required=""
+                               ng-pattern="/^[0-9]\d*$/">
+                        <p class="validate-err validate-w-67"
+                           data-ng-if="unifiedForm.sellNums.$invalid && (unifiedForm.sellNums.$dirty || unifiedForm.$submitted)">
+                            请输入非负整数</p>
+                    </td>
+                    <td>
+                        <input type="number" data-ng-model="product.purchase.unified.limitNums" name="limitNums"
+                               ng-pattern="/^[0-9]\d*$/">
+                        <p class="validate-err validate-w-67"
+                           data-ng-if="unifiedForm.limitNums.$invalid && (unifiedForm.limitNums.$dirty || unifiedForm.$submitted)">
+                            请输入非负整数</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div class="clearfix">
+                <button class="btn btn-success mr5 fr" type="button">预览</button>
+                <button class="btn btn-primary mr5 fr" type="submit">保存商品</button>
+            </div>
+        </form>
+    </div>
+    <!-- 分渠道设置库存/价格 -->
+    <div class="channel"
+         data-ng-if="!vm.isCommonSet">
+        <form name="multipleForm" novalidate ng-submit="vm._multipleForm(multipleForm)">
+            <h1 class="review-title">
+                商品价格/库存<a rel="1" class="channel-link" href="javascript:void(0)"
+                          data-ng-click="vm.isCommonSet = !vm.isCommonSet">统一设置库存/价格</a>
+            </h1>
+            <h4 class="sub-title">分渠道设置库存/价格</h4>
+            <div>
+                <label class="mr20" data-ng-repeat="channel in vm.channels track by channel.scCode">
+                    <input type="checkbox" class="table-check check-element mr5"
+                           data-ng-model="channel.isChecked"
+                           data-ng-change="vm._changeChannel(channel.isChecked, product.purchase.multiple, channel, product.psCode, $index)">
+                    {{channel.name}}
+                </label>
+            </div>
+
+            <table class="table table-hover validate-table">
+                <thead>
+                <tr>
+                    <th class="channel-name">渠道</th>
+                    <th>市场价（元）</th>
+                    <th>售价（元）</th>
+                    <th>渠道库存</th>
+                    <th>限购（0为不限购）</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr
+                        data-ng-repeat="item in product.purchase.multiple track by $index"
+                        data-ng-if="item.scCode"
+                        data-ng-form="innerForm">
+                    <td class="channel-name">{{item.scName}}</td>
+                    <td>
+                      <input type="text" data-ng-model="item.marketAmount" name="marketAmount"
+                             ng-pattern="/^[0-9]+([.]\d{1,2})?$/">
+                      <p class="validate-err validate-w-67"
+                         data-ng-if="innerForm.marketAmount.$invalid && (innerForm.marketAmount.$dirty || multipleForm.$submitted)">
+                        请输入数字并保留两位小数</p>
+                    </td>
+                    <td>
+                      <input type="text" data-ng-model="item.sellPrice" name="sellPrice"
+                             required=""
+                             ng-pattern="/^[0-9]+([.]\d{1,2})?$/">
+                      <p class="validate-err validate-w-67"
+                         data-ng-if="innerForm.sellPrice.$invalid && (innerForm.sellPrice.$dirty || multipleForm.$submitted)">
+                        请输入数字并保留两位小数</p>
+                    </td>
+                    <td>
+                      <input type="number" data-ng-model="item.sellNums" name="sellNums"
+                             required=""
+                             ng-pattern="/^[0-9]\d*$/">
+                      <p class="validate-err validate-w-67"
+                         data-ng-if="innerForm.sellNums.$invalid && (innerForm.sellNums.$dirty || multipleForm.$submitted)">
+                        请输入非负整数</p>
+                    </td>
+                    <td>
+                      <input type="number" data-ng-model="item.limitNums" name="limitNums"
+                             ng-pattern="/^[0-9]\d*$/">
+                      <p class="validate-err validate-w-67"
+                         data-ng-if="innerForm.limitNums.$invalid && (innerForm.limitNums.$dirty || multipleForm.$submitted)">
+                        请输入非负整数</p>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <p class="hint mb20">（提示：分渠道设置库存后，各渠道之间的库存是独立的。）</p>
+
+            <div class="clearfix">
+                <button class="btn btn-success mr5 fr" type="button">预览</button>
+                <button class="btn btn-primary mr5 fr" type="submit" data-ng-click="vm._saveDelivery()">保存商品</button>
+            </div>
+        </form>
+    </div>
+</div>

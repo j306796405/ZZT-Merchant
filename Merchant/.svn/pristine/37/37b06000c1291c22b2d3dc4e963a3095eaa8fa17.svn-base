@@ -1,0 +1,124 @@
+/**!
+ * publish.route.js
+ * @author jianglj
+ * @create 2016-04-15 13:22
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .config(routerConfig);
+
+    routerConfig.$inject = [
+        '$stateProvider'
+    ];
+    function routerConfig($stateProvider) {
+
+        var createPath = 'app/business/product/publish/';
+        var createState = 'xcore.product_publish';
+        var createPackage = 'product.publish.main';
+
+        var detailPath = 'app/business/product/publish/';
+        var detailState = 'xcore.product_detail';
+        var detailPackage = 'product.publish.detail';
+
+        var copyPath = 'app/business/product/publish/';
+        var copyState = 'xcore.product_copy';
+        var copyPackage = 'product.publish.copy';
+
+        $stateProvider
+        //入仓创建
+            .state(createState + '.delivery', {
+                views: {
+                    "": {
+                        templateUrl: createPath + 'view/main-delivery-info.html',
+                        controller: createPackage + '.delivery.info',
+                        controllerAs: 'vm'
+                    }
+                },
+                params: {
+                    data: {}
+                }
+            })
+            .state(detailState, {
+                templateUrl: detailPath + 'view/detail.html',
+                controller: detailPackage,
+                controllerAs: 'vm',
+                params: {
+                    psCode: '',
+                    tabIndex: '',
+                    isDelivery: ''
+                }
+            })
+            //入仓编辑
+            .state(detailState + '.delivery', {
+                views: {
+                    "": {
+                        templateUrl: detailPath + 'view/detail-delivery-info.html',
+                        controller: detailPackage + '.delivery.info',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: detailPath + 'view/detail-delivery-purchase.html',
+                        controller: detailPackage + '.delivery.purchase',
+                        controllerAs: 'vm'
+                    }
+                }
+            })
+            .state(copyState, {
+                templateUrl: detailPath + 'view/copy.html',
+                controller: copyPackage,
+                controllerAs: 'vm',
+                params: {
+                    psCode: '',
+                    tabIndex: ''
+                }
+            })
+            //入仓复制
+            .state(copyState + '.delivery', {
+                views: {
+                    "": {
+                        templateUrl: copyPath + 'view/copy-delivery-info.html',
+                        controller: copyPackage + '.delivery.info',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: copyPath + 'view/copy-delivery-purchase.html',
+                        controller: copyPackage + '.delivery.purchase',
+                        controllerAs: 'vm'
+                    }
+                }
+            })
+            //不入仓创建
+            .state(createState + '.notDelivery', {
+                views: {
+                    "": {
+                        templateUrl: createPath + 'view/main-not-delivery-info.html',
+                        controller: createPackage + '.notDelivery.info',
+                        controllerAs: 'vm'
+                    }
+                },
+                params: {
+                    data: {}
+                }
+            })
+            //不入仓编辑
+            .state(detailState + '.notDelivery', {
+                views: {
+                    "": {
+                        templateUrl: detailPath + 'view/detail-not-delivery-info.html',
+                        controller: detailPackage + '.notDelivery.info',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: detailPath + 'view/detail-not-delivery-purchase.html',
+                        controller: detailPackage + '.notDelivery.purchase',
+                        controllerAs: 'vm'
+                    }
+                }
+            })
+    }
+
+})();
+

@@ -1,0 +1,113 @@
+/**!
+ * delivery.purchase.create
+ * @author jianglj
+ * @create 2016-05-06 14:16
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.DeliveryPurchaseController', deliveryPurchaseController)
+
+    deliveryPurchaseController.$inject = [
+        '$controller',
+        '$state',
+        '$scope',
+        '$filter',
+        'product.publish.publishService',
+        'comp.notification.notificationService',
+        'delivery.urls',
+    ];
+    function deliveryPurchaseController($controller, $state, $scope, $filter, publishService, notificationService, deliveryUrls) {
+        var vm = this,
+            detailUrls = deliveryUrls.detail,
+        //修改入库商品统一设置库存/价格
+            ADD_UNIFIED = '/product/inWarehouse/stock-price/add-unified',
+        //新增入库商品分渠道设置库存/价格
+            ADD_MULTIPLE = '/product/inWarehouse/stock-price/add-multiple',
+            DELIVERY_EDIT = detailUrls.detail;
+
+        //统一设置库存/价格 true, 分渠道设置价格/库存 false
+        vm.isCommonSet = true;
+        vm.channels = [];
+        $scope.product.purchase = {
+            unified: {
+                marketAmount: '',
+                sellPrice: '',
+                sellNums: '',
+                limitNums: '',
+            },
+            multiple: []
+        }
+        
+        //更改渠道
+        vm._changeChannel = _changeChannel;
+        //统一设置库存/价格保存表单
+        vm._unifiedForm = _unifiedForm;
+        //分渠道设置价格/库存保存表单
+        vm._multipleForm = _multipleForm;
+        //初始化
+        vm._init = _init;
+        
+        vm._init();
+
+        function _init(){
+            $scope.$on('getPurchaseData', function(e, data) {
+                debugger;
+                vm.channels = data.channels;
+                vm.purchase = data.purchase;
+            })
+        }
+
+        function _unifiedForm(form) {
+            var psCode = $scope.product.psCode;
+            if (form.$invalid) {
+                return;
+            }
+            var promise = publishService.updateUnified(ADD_UNIFIED, null, _.extend({psCode: psCode}, $scope.product.purchase.unified));
+            promise
+                .then(function (data) {
+                    publishService
+                        .getDeliveryDetail(DELIVERY_EDIT, {psCode: psCode}, null)
+                        .then(function (product) {
+                            $state.go('xcore.product_publish.delivery_edit', {
+                                data: product
+                            });
+                            $scope.tabs._goPurchase();
+                        }, function (errMsg) {
+                            notificationService.notify('异常', errMsg);
+                        });
+                    notificationService.success('成功', '保存成功');
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                })
+        }
+
+        function _multipleForm(form) {
+            if (form.$invalid) {
+                return;
+            }
+            var promise =  publishService.updateMultiple(ADD_MULTIPLE, null, _.compact($scope.product.purchase.multiple));
+            promise
+                .then(function (data) {
+                    notificationService.success('成功', '保存成功');
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                })
+        }
+
+        function _changeChannel(isChecked, multiple, channel, index) {
+            if (isChecked) {
+                multiple[index] = {
+                    scCode: channel.scCode,
+                    scName: channel.name,
+                    psCode: $scope.product.psCode
+                }
+            } else {
+                multiple[index] = undefined
+            }
+        }
+    }
+
+})();

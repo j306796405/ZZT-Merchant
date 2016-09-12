@@ -1,0 +1,34 @@
+/**!
+ * delivery.edit.controller.js
+ * @author jianglj
+ * @create 2016-04-27 13:48
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.DeliveryEditController', DeliveryEditController)
+
+    DeliveryEditController.$inject = [
+        '$scope',
+        '$rootScope',
+        '$stateParams',
+        'product.publish.publishService',
+        'comp.util.arrayUtil',
+        'settings',
+        'FileUploader',
+        'comp.notification.notificationService'
+    ];
+
+    function DeliveryEditController($scope, $rootScope, $stateParams, publishService, arrayUtil, settings, FileUploader, notificationService) {
+
+        var vm = this;
+        $scope.product = $stateParams.data;
+
+        console.log($scope.product);
+        $scope.detailDesc = $scope.product.detailDesc;
+        $scope.detailDesc = $scope.product.detailDesc;
+    }
+
+})();

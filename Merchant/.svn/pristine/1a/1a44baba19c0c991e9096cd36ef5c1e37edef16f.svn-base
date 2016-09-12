@@ -1,0 +1,353 @@
+/**!
+ * delivery.controller
+ * @author jianglj
+ * @create 2016-04-18 10:58
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.main.delivery.info', DeliveryController)
+
+    DeliveryController.$inject = [
+        '$state',
+        '$scope',
+        '$rootScope',
+        'product.publish.publishService',
+        'settings',
+        'delivery.urls',
+        'comp.notification.notificationService',
+        'ngDialog',
+        '$timeout'
+    ];
+
+    function DeliveryController($state, $scope, $rootScope, publishService, settings, deliveryUrls, notificationService, ngDialog, $timeout) {
+        var vm = this,
+            createUrls = deliveryUrls.create,
+            //采购商品详情查询
+            GET_PRODUCT = createUrls.product,
+            //采购商品分类/属性/规格/参数/品牌查询
+            GET_DETAIL = createUrls.detail,
+            //创建入仓商品请求参数
+            CREATE_PRODUCT = createUrls.create,
+            //采购商品列表查询
+            PURCHASE_PRODUCT = createUrls.purchaseProducts;
+
+        vm.UPLOAD = settings.backend.merchant;
+        //通过reset方式获取的异步对象
+        vm.rest = {};
+        //产品查询方式 名称|SKU
+        vm.filterBy = [];
+        //如果关联商品数量大于1，每一个关联的模块只可以添加相同SKU的产品
+        vm.filterSKU = '';
+
+        _.extend($scope.product.delivery, {
+            purchaseProducts: [],
+            pics: [],
+            whCode: ''
+        });
+
+        _init();
+
+        function _init() {
+            $scope.product._changeProductStatus(false, true);
+
+            //关联商品数量下拉
+            vm.relate_num_select = [
+                {name: '1', id: '1'},
+                {name: '2', id: '2'},
+                {name: '3', id: '3'},
+                {name: '4', id: '4'},
+                {name: '5', id: '5'},
+                {name: '6', id: '6'},
+                {name: '7', id: '7'},
+                {name: '8', id: '8'},
+                {name: '9', id: '9'},
+                {name: '10', id: '10'}
+            ];
+            vm.relate_num = vm.relate_num_select[0].id;
+            //按商品名称查询下拉
+            vm.filterBySelect = [
+                {name: '按商品名称查询', id: 'name'},
+                {name: '按采购SKU号查询', id: 'SKU'}
+            ];
+            vm.filterBy[0] = vm.filterBySelect[0].id;
+            //关联产品N次产品
+            vm._ifRelateProduct = _ifRelateProduct;
+            //关联产品N次产品
+            vm._relateProduct = _relateProduct;
+            //关联并确定销售分类后加载产品详情
+            vm._loadProductInfo = _loadProductInfo;
+            //关联产品
+            vm._selectProduct = _selectProduct;
+            //取消关联产品
+            vm._unlinkProduct = _unlinkProduct;
+            //新增产品规格
+            vm._addEmptySpecification = _addEmptySpecification;
+            //移除产品规格
+            vm._removeSpecification = _removeSpecification;
+            //新增产品参数
+            vm._addEmptyParameters = _addEmptyParameters;
+            //移除产品参数
+            vm._removeParameters = _removeParameters;
+            //根据SKU查询产品
+            vm._purchaseProductSearchBySKU = _purchaseProductSearchBySKU;
+            //根据产品名查询产品
+            vm._purchaseProductSearchByName = _purchaseProductSearchByName;
+            //选中autocomplete下拉
+            vm._selectAutoComplete = _selectAutoComplete;
+            //autocomplete focus in事件
+            vm._focusIn = _focusIn;
+            //产品信息容器是否显示
+            vm.isLoadInfo = false;
+            //保存事件
+            vm._createForm = _createForm;
+            //默认关联商品数量为1
+            _relateProduct(1);
+
+            function _ifRelateProduct(){
+                ngDialog.openConfirm({
+                        template: 'ifRelateProduct'
+                    })
+                    .then(function () {
+                        vm._relateProduct(vm.relate_num);
+                    }, function () {
+
+                    });
+            }
+
+            function _relateProduct(repeat) {
+                var products = $scope.product.delivery.purchaseProducts;
+                //重新选择时清空处理
+                products.splice(0, products.length);
+                vm.isLoadInfo = false;
+                for (var i = 0; i < repeat; i++) {
+                    var relateProduct = new RelateProduct([], [], 0, 0, products.length);
+                    products.push(relateProduct);
+                    vm.filterBy[i] = vm.filterBySelect[0].id;
+                }
+
+                function RelateProduct(batchProducts, pprIds, nums, isMain, grpNo) {
+                    this.batchProducts = batchProducts;
+                    this.pprIds = pprIds;
+                    this.nums = nums;
+                    this.isMain = isMain;
+                    this.grpNo = grpNo;
+                }
+            }
+
+            function _selectProduct($event, item, purchaseProducts, index) {
+                publishService.addProduct($event, item, $scope.product.delivery, purchaseProducts, index, GET_PRODUCT);
+            }
+
+            function _unlinkProduct($event, index, item) {
+                publishService._unlinkProduct($event, index, item, vm);
+            }
+
+            //同一个模块下的产品的sku必须相同 item下的outSku是用关联产品的参数， sku是负责禁止请求不同sku产品
+            function _selectAutoComplete(selected) {
+                var index = this.id,
+                    item = $scope.product.delivery.purchaseProducts[index];
+                publishService._selectAutoComplete(selected, item);
+            }
+
+            function _purchaseProductSearchByName(str) {
+                var saCode = $rootScope.session.saCode,
+                    index = this.id,
+                    item = $scope.product.delivery.purchaseProducts[index]
+                var request = publishService._remoteUrlRequestMake({name: str}, saCode, item, $scope.product.delivery);
+                return publishService._purchaseProductSearch(PURCHASE_PRODUCT, null, request);
+            }
+
+            function _purchaseProductSearchBySKU(str) {
+                var saCode = $rootScope.session.saCode,
+                    index = this.id,
+                    item = $scope.product.delivery.purchaseProducts[index]
+                var request = publishService._remoteUrlRequestMake({sku: str}, saCode, item, $scope.product.delivery);
+                return publishService._purchaseProductSearch(PURCHASE_PRODUCT, null, request);
+            }
+
+            function _focusIn() {
+
+            }
+
+            function _loadProductInfo($event, item) {
+                var isValid = true,
+                    rules = [validateData];
+
+                _.each(rules, function(ruleFunc, i){
+                    if(isValid){
+                        ruleFunc();
+                    }
+                })
+
+                if(isValid){
+                    loadProduct();
+                }
+
+                function validateData(){
+                    if (!item.pprIds.length) {
+                        notificationService.notify('异常', '请先关联数据');
+                        vm.isLoadInfo = false;
+                        item.isMain = 0;
+                        return isValid = false;;
+                    }
+                }
+
+                function loadProduct(){
+                    publishService.getProductInfo(GET_DETAIL, null, {code : item.pprIds[0]})
+                        .then(function (product) {
+                            var delivery = $scope.product.delivery;
+                            delivery.parameters = product.classes.parameters || [];
+                            delivery.properties = product.classes.attributes || [];
+                            delivery.specifications = [];
+                            delivery.pics.splice(0, delivery.pics.length);
+                            delivery.info = {
+                                name: '',
+                                purchaseClass: product.classes.pcCode,
+                                brandCode: product.brand.brancCode
+                            };
+                            delivery.detailDesc = '';
+
+                            vm.rest.productInfo = product;
+
+                            vm.isLoadInfo = true;
+
+                            $timeout(function(){
+                              $('#froalaEditor').froalaEditor({});
+                            })
+                        }, function (errResponse) {
+                            notificationService.notify('异常', errResponse);
+                        })
+                }
+            }
+
+            function _addEmptySpecification(item) {
+                if(!item.values){
+                    item.values = [];
+                }
+                item.values.push({
+                    pvId: '',
+                    isGlobal: 0,
+                    index: item.values.length - 1
+                })
+            }
+
+            function _removeSpecification(items, index) {
+                items.splice(index, 1);
+            }
+
+            function _addEmptyParameters(items) {
+                items.push({
+                    ppId: '',
+                    pvName: "",
+                    isGlobal: 0
+                })
+            }
+
+            function _removeParameters(parameters, index) {
+                parameters.splice(index, 1);
+            }
+
+            function _createForm(form){
+
+                var submitData = angular.copy($scope.product.delivery),
+                    isValid = true,
+                    rules = [filterPurchaseProducts, filterInfo, filterSpecifications, filterPics, filterProperties, filterParameters, submit];
+
+                _.each(rules, function(ruleFunc, i){
+                    if(isValid){
+                        ruleFunc();
+                    }
+                })
+
+                function filterPurchaseProducts(){
+                    $.each(submitData.purchaseProducts, function(i, o){
+                        if(o.batchProducts.length === 0){
+                            notificationService.notify('异常', '关联的采购商品最少为1个');
+                            return isValid = false;
+                        }
+                    })
+                }
+
+                function filterInfo(){
+                    if(!submitData.info.name){
+                        notificationService.notify('异常', '请填写商品名称');
+                        return isValid = false;
+                    }
+                }
+
+                function filterSpecifications(){
+                    var specifications = _.compact(submitData.specifications);
+                    if(specifications.length === 0){
+                        notificationService.notify('异常', '请至少选择一种规格');
+                        return isValid = false;
+                    }
+                    submitData.specifications = specifications;
+                }
+
+                function filterPics(){
+                    if(submitData.pics.length === 0){
+                        notificationService.notify('异常', '请上传至少一张商品图片');
+                        return isValid = false;
+                    }
+                }
+
+                function filterProperties(){
+                    var propertiesTemp = [];
+                    $.each(submitData.properties, function(i, o){
+                        //如果是非必填
+                        o.pvIds = _.compact(o.pvIds);
+                        if(!+o.required){
+                            if(o.pvIds.length > 0){
+                                propertiesTemp.push(o);
+                            }
+                        }else{
+                            if(o.pvIds.length === 0){
+                                notificationService.notify('异常', '请填写商品属性的必填项');
+                                return isValid = false;
+                            }
+                            propertiesTemp.push(o);
+                        }
+                    })
+                    submitData.properties = propertiesTemp;
+                }
+
+                function filterParameters(){
+                    var parametersTemp = [];
+                    $.each(submitData.parameters, function(i, o){
+                        //如果是非必填字段 仅记录有值得字段
+                        if(!+o.required){
+                            (!!o.ppId && !!o.pvId) ? parametersTemp.push(o) : '';
+                        }else{
+                            if(!o.pvId){
+                                notificationService.notify('异常', '请填写商品参数的必填项');
+                                return isValid = false;
+                            }
+                            parametersTemp.push(o);
+                        }
+                    })
+                    submitData.parameters = parametersTemp;
+                }
+
+                function submit(){
+                    publishService.createDelivery(CREATE_PRODUCT, null, submitData).then(
+                        function (product) {
+                            notificationService.success('成功', '创建成功');
+                            var psCode = product.psCode;
+                            $state.go('xcore.product_detail', {
+                                psCode: psCode,
+                                tabIndex: 1,
+                                isDelivery: true
+                            });
+                        },
+                        function (errMsg) {
+                            errMsg ? notificationService.notify('异常', errMsg) : '';
+                        })
+                }
+            }
+        }
+    }
+
+})();

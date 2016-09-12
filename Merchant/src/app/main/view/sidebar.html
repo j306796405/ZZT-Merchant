@@ -1,0 +1,14 @@
+<div class="sidebar">
+    <ul class="sidebar-menu">
+        <li class="sub-menu active"><a href="#"><i class="icon-home"></i><span>首页</span></a></li>
+        <li class="sub-menu" data-ng-repeat="item in vm.sideBar.menu">
+            <a href="javascript:;" class="J_menu">
+                <span class="arrow"></span><i class="{{item.icon}}"></i>
+                <span>{{item.name}}</span>
+            </a>
+            <ul class="sub" style="display: none" >
+                <li data-ng-repeat="subItem in item.submenu"><a class="J_item" state="{{ 'xcore.' + item.state + '_' + subItem.state }}">{{subItem.name}}</a></li>
+            </ul>
+        </li>
+    </ul>
+</div>

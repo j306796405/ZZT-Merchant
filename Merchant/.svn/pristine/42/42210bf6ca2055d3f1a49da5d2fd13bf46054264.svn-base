@@ -1,0 +1,129 @@
+/**!
+ * copy.controller
+ * @author jianglj
+ * @create 2016-05-19 18:45
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.copy', CopyController)
+
+    CopyController.$inject = [
+        '$state',
+        '$stateParams',
+        '$scope',
+        'delivery.urls',
+        'product.publish.publishService',
+        'comp.notification.notificationService',
+        '$q'
+    ];
+    function CopyController($state, $stateParams, $scope, deliveryUrls, publishService, notificationService, $q) {
+        var vm = this,
+            detailUrls = deliveryUrls.detail,
+            PRODUCT_DETAIL = detailUrls.detail,
+        //查询销售商品的关联采购商品详情信息
+            PURCHASE_DETAIL = detailUrls.purchase;
+
+        $scope.urls = {
+            PURCHASE: '',
+            PURCHASE_DETAIL: '',
+            CHANNELS: ''
+        }
+
+        $scope.product = {
+            psCode: '',
+            _setPsCode: function(psCode){
+                this.psCode = psCode;
+            },
+            delivery: {},
+            purchase: {},
+            status: {
+                isCreate: false,
+                isDelivery: true
+            },
+            _changeProductStatus: _changeProductStatus
+        }
+
+        $scope.tabs = {
+            //默认选中第一个tab
+            index: 1,
+            //tab切换 params: tabIndex, ...
+            _changeTab: _changeTab,
+            //点击商品信息tab params psCode
+            _goInfo: _goInfo,
+            //点击商品价格/库存/渠道tab
+            _goPurchase: _goPurchase
+        }
+
+        vm._init = _init;
+
+        vm._init();
+
+        function _init(){
+            var psCode = $stateParams.psCode;
+            $scope.product._changeProductStatus(false, true);
+            $scope.product._setPsCode(psCode);
+
+            var INFO_EVENT= 'getInfoData';
+            publishService
+                .getDeliveryDetail(PRODUCT_DETAIL, {psCode: psCode}, null)
+                .then(function (info) {
+                    $state.go('xcore.product_copy.delivery').then(function() {
+                        $scope.$broadcast(INFO_EVENT, info);
+                    });
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                });
+            $scope.tabs.index = 1;
+        }
+
+        function _changeTab(){
+            var index = Array.prototype.splice.apply(arguments, [0, 1])[0] || 0;
+            var tabsFunc = [$scope.tabs._goInfo, $scope.tabs._goPurchase];
+            var args = Array.prototype.join.call(arguments, ',');
+            tabsFunc[index](args);
+        }
+
+        function _goInfo(psCode){
+            $state.go('xcore.product_detail', {
+                psCode: psCode,
+                tabIndex: 0,
+                isDelivery: true
+            });
+        }
+
+        function _goPurchase(copiedPsCode){
+            var PURCHASE_EVENT= 'getPurchaseData';
+            $q.all([
+                publishService.getPurchase(PURCHASE_DETAIL, {psCode: $scope.product.psCode}, null),
+                publishService.getPurchase(PURCHASE_DETAIL, {psCode: copiedPsCode}, null)
+            ]).then(
+                function(purchases){
+                    $scope.$broadcast(PURCHASE_EVENT, {
+                        purchase: purchases[0],
+                        purchaseCopied: purchases[1]
+                    });
+                },
+                function (errMsg) {
+                    errMsg[0] ? notificationService.notify('异常', errMsg[0]) : '';
+                    errMsg[1] ? notificationService.notify('异常', errMsg[1]) : '';
+                }
+            );
+            $scope.tabs.index = 2;
+        }
+
+        function _changeProductStatus(isCreate, isDelivery){
+            this.status.isCreate = isCreate;
+            this.status.isDelivery = isDelivery;
+            if(isDelivery){
+                $scope.urls.PURCHASE_DETAIL = detailUrls.purchase;
+            }else{
+                $scope.urls.PURCHASE_DETAIL = '';
+            }
+        }
+
+    }
+
+})();

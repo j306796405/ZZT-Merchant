@@ -1,0 +1,336 @@
+/**!
+ * not-delivery.controller
+ * 创建非入仓商品控制器
+ * @author xiaodong.liu
+ * @create 2016-05-07 14:23
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.main.notDelivery.info', NotDeliveryController)
+
+    NotDeliveryController.$inject = [
+        '$scope',
+        'product.publish.publishNoDeliveryService',
+        'notDelivery.urls',
+        'comp.notification.notificationService',
+        '$q',
+        'comp.util.arrayUtil',
+        'comp.session.sessionService'
+    ];
+
+    function NotDeliveryController($scope, publishNoDeliveryService, notDeliveryUrls, notificationService, $q, arrayUtil, sessionService) {
+        var vm = this,
+            createUrls = notDeliveryUrls.create,
+            detailUrls = notDeliveryUrls.detail,
+        // 一级采购分类
+            FIRST_CATEGORY = createUrls.firstCategory,
+        //联动采购分类
+            OTHER_CATEGORY = createUrls.otherCategory,
+        //采购商品分类/属性/规格/参数/品牌查询
+            PRODUCT_INFO = createUrls.detail,
+        // 品牌
+            BRANDS = createUrls.brands,
+        //创建入仓商品请求参数
+            CREATE_PRODUCT = createUrls.create;
+
+        vm.isLoadInfo = false;
+        $scope.form = {};
+        vm.product = $scope.form.product = {
+            info: {},
+            productSpecifications: [],
+            properties: [],
+            parameters: [],
+            pics: [],
+            detailDesc: ''
+        }
+        var info = {
+            "areaType":'',
+            "baCode":'',
+            "purchaseClass":'',
+            "brandCode":'',
+            "name":'',
+            "summary":''
+        };
+        vm.product.info = info;
+        vm.src = {};
+        vm.selected = {};
+        vm.src={
+            specifications: [],
+            properties: [],
+            parameters: []
+        };
+        vm.selected = {
+            specifications:{ list:[],specIndexList:[],finalSpecMatrixList:[] },
+            properties:[],
+            parameters:[]
+        }
+        //一级采购分类查询
+        vm._getFirstCategory = _getFirstCategory;
+        //二级采购分类查询
+        vm._getSecondCategory = _getSecondCategory;
+        //三级采购分类查询
+        vm._getThirdCategory = _getThirdCategory;
+        /***
+         * 根据分类加载商品配置内容（规格,属性,参数等)
+         * @type {loadProductConfigureFunc}
+         */
+        vm._loadProductConfigure = _loadProductConfigure;
+        /***
+         * 选择规格
+         * @type {selectSpecificationFunc}
+         */
+        vm._selectSpecification = _selectSpecification;
+        vm._isSpecValueSelected = _isSpecValueSelected;
+        vm._updateSpecMatrix = _updateSpecMatrix;
+        //加载产品信息
+        vm._loadProductInfo = _loadProductInfo;
+        //新增产品参数
+        vm._addEmptyParameters = _addEmptyParameters;
+        //移除产品参数
+        vm._removeParameters = _removeParameters;
+        //保存事件
+        vm._createForm = _createForm;
+
+        function _getFirstCategory(){
+            return publishNoDeliveryService
+                ._commonGet(FIRST_CATEGORY, null, null)
+                .then(function(data){
+                    return data = arrayUtil.formatToMulitSelect(data);
+                }, function(){
+                    notificationService.notify('异常', '一级采购分类查询出错');
+                })
+        }
+        
+        function _getSecondCategory(selected){
+            var pcCode = selected.firstCategory;
+            return publishNoDeliveryService
+                ._commonGet(OTHER_CATEGORY, {pcCode: pcCode}, null)
+                .then(function(data){
+                    return data = arrayUtil.formatToMulitSelect(data);
+                }, function(){
+                    notificationService.notify('异常', '二级采购分类查询出错');
+                })
+        }
+        
+        function _getThirdCategory(selected){
+            var pcCode = selected.secondCategory;
+            return publishNoDeliveryService
+                ._commonGet(OTHER_CATEGORY, {pcCode: pcCode}, null)
+                .then(function(data){
+                    return data = arrayUtil.formatToMulitSelect(data);
+                }, function(){
+                    notificationService.notify('异常', '二级采购分类查询出错');
+                })
+        }
+
+        function _loadProductConfigure() {
+            publishNoDeliveryService._loadProductConfigure(vm);
+        }
+
+        function _selectSpecification() {
+            publishNoDeliveryService._selectSpecification();
+        }
+
+        function _isSpecValueSelected(matrixIndex, pvId) {
+            return publishNoDeliveryService._isSpecValueSelected(matrixIndex, pvId)
+        }
+
+        function _updateSpecMatrix($event, matrixIndex, pvId) {
+            publishNoDeliveryService._updateSpecMatrix($event, matrixIndex, pvId);
+        }
+
+        function _loadProductInfo(purchaseClass){
+            if(!purchaseClass){
+                vm.isLoadInfo = false;
+                return;
+            }
+            var productInfoParam = {pcCode: purchaseClass},
+                brandsParam = {saCode: sessionService.getSessionFromCache().saCode};
+
+            $q.all([
+                    publishNoDeliveryService._commonGet(PRODUCT_INFO, null, productInfoParam),
+                    publishNoDeliveryService._commonGet(BRANDS, brandsParam, null)
+            ]).then(function(data){
+                var product = data[0].classes;
+                vm.product.properties = product.attributes,
+                vm.product.parameters = product.parameters,
+                vm.product.info.brandsSelect = data[1];
+                vm.isLoadInfo = true;
+            }, function(errMsg){
+                errMsg[0] ? notificationService.notify('异常', errMsg[0]) : '';
+                errMsg[1] ? notificationService.notify('异常', errMsg[1]) : '';
+            })
+
+        }
+
+        function _addEmptyParameters(parameters){
+            if(parameters.length >= 20){
+                notificationService.notify('异常', '自定义参数已达上限');
+                return;
+            }
+            parameters.push({
+                ppId: '',
+                pvId: '',
+                isGlobal: 0
+            })
+        }
+
+        function _removeParameters(parameters, index){
+            parameters.splice(index, 1);
+        }
+
+        function _createForm(form){
+            var submitData = angular.copy(vm.product),
+                isValid = true,
+                rules = [filterInfo, filterPics, filterProperties, filterParameters, submit];
+
+            submitData.productSpecifications = [
+                {
+                    "specifications": [
+                        {
+                            "ppId": "20",
+                            //属性键KEY
+                            "pvId": "230",
+                            //属性值KEY
+                            "isGlobal": "1"
+                            //是否是全局属性，1：是，0：否
+                        },
+                        {
+                            "ppId": "19",
+                            "pvId": "70",
+                            "isGlobal": "1"
+                        }
+                    ],
+                    //市场价
+                    "SETTLE_AMOUNT": "100.00",
+                    //HS编码，这个是常量
+                    "HS_CODE": "100001",
+                    //净重，这个是常量
+                    "NET_WEIGHT": "5.00",
+                    //毛重，这个是常量
+                    "GROSS_WEIGHT": "6.00",
+                    //货号，这个是常量
+                    "PR_NO": "10000123",
+                    //条形码，这个是常量
+                    "BARCODE": "6921734976543",
+                    isCurrent: 1
+                },
+                {
+                    "specifications": [
+                        {
+                            "ppId": "001",
+                            //属性键KEY
+                            "pvId": "0001",
+                            //属性值KEY
+                            "isGlobal": "1"
+                            //是否是全局属性，1：是，0：否
+                        },
+                        {
+                            "ppId": "002",
+                            "pvId": "黄色",
+                            "isGlobal": "0"
+                        }
+                    ],
+                    //市场价
+                    "SETTLE_AMOUNT": "100.00",
+                    //HS编码，这个是常量
+                    "HS_CODE": "100001",
+                    //净重，这个是常量
+                    "NET_WEIGHT": "5.00",
+                    //毛重，这个是常量
+                    "GROSS_WEIGHT": "6.00",
+                    //货号，这个是常量
+                    "PR_NO": "10000123",
+                    //条形码，这个是常量
+                    "BARCODE": "6921734976543",
+                    isCurrent: 0
+                }
+            ],
+
+            _.each(rules, function(ruleFunc, i){
+                if(isValid){
+                    ruleFunc();
+                }
+            })
+
+            function filterInfo(){
+                if(!submitData.info.name){
+                    notificationService.notify('异常', '请填写商品名称');
+                    return isValid = false;
+                }
+            }
+
+            function filterPics(){
+                if(submitData.pics.length === 0){
+                    notificationService.notify('异常', '请上传至少一张商品图片');
+                    return isValid = false;
+                }
+            }
+
+            function filterProperties(){
+                var propertiesTemp = [];
+                $.each(submitData.properties, function(i, o){
+                    //如果是非必填
+                    o.pvIds = _.compact(o.pvIds);
+                    if(!+o.required){
+                        if(o.pvIds.length > 0){
+                            propertiesTemp.push(o);
+                        }
+                    }else{
+                        if(o.pvIds.length === 0){
+                            notificationService.notify('异常', '请填写商品属性的必填项');
+                            return isValid = false;
+                        }
+                        propertiesTemp.push(o);
+                    }
+                })
+                submitData.properties = propertiesTemp;
+            }
+
+            function filterParameters(){
+                var parametersTemp = [];
+                $.each(submitData.parameters, function(i, o){
+                    //如果是非必填字段 仅记录有值得字段
+                    if(!+o.required){
+                        (!!o.ppId && !!o.pvId) ? parametersTemp.push(o) : '';
+                    }else{
+                        if(!o.pvId){
+                            notificationService.notify('异常', '请填写商品参数的必填项');
+                            return isValid = false;
+                        }
+                        parametersTemp.push(o);
+                    }
+                })
+                submitData.parameters = parametersTemp;
+            }
+
+            function submit(){
+                console.log(submitData);
+                publishNoDeliveryService._commonPost(CREATE_PRODUCT, null, submitData).then(
+                    function (product) {
+                        var psCode = product.psCode;
+                        $scope.product._setPsCode(psCode);
+                        /*publishService
+                            .getDeliveryDetail(PRODUCT_DETAIL, {psCode: psCode}, null)
+                            .then(function (data) {
+                                $state.go('xcore.product_publish.delivery_edit', {
+                                    data: data
+                                });
+                                $scope.product.status._changeProductStatus(2, true, true);
+                                $scope.tabs._goPurchase();
+
+                            }, function (errMsg) {
+                                notificationService.notify('异常', errMsg);
+                            });*/
+                    },
+                    function (errMsg) {
+                        errMsg ? notificationService.notify('异常', errMsg) : '';
+                    })
+            }
+        }
+    }
+
+})();

@@ -1,0 +1,101 @@
+/**!
+ * delivery.edit.controller.js
+ * @author jianglj
+ * @create 2016-04-27 13:48
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.DeliveryEditController', DeliveryEditController)
+
+    DeliveryEditController.$inject = [
+        '$scope',
+        '$rootScope',
+        '$stateParams',
+        'product.publish.publishService',
+        'comp.util.arrayUtil',
+        'settings',
+        'FileUploader',
+        'comp.notification.notificationService'
+    ];
+
+    function DeliveryEditController($scope, $rootScope, $stateParams, publishService, arrayUtil, settings, FileUploader, notificationService) {
+
+
+        var vm = this,
+            //采购商品详情查询
+            PRODUCT_DETAIL = '/merchant/purchase-products/detail/:pprId';
+        $scope.product = $stateParams.data;
+
+        // console.log($scope.product);
+        $scope.detailDesc = $scope.product.detailDesc;
+        $scope.purchaseProducts = $scope.product.purchaseProducts;
+        $scope.grpProducts = $scope.product.grpProducts;
+        $scope.info = $scope.product.info;
+        $scope.parameters = $scope.product.parameters;
+        $scope.pics = $scope.product.pics;
+        $scope.properties = $scope.product.properties;
+        $scope.specifications = $scope.product.specifications;
+
+        //关联产品
+        vm._selectProduct = _selectProduct;
+        //产品取消关联
+        vm._unlinkProduct = _unlinkProduct;
+        //根据SKU搜索
+        vm._remoteUrlRequestBySKU = _remoteUrlRequestBySKU;
+        //根据产品名搜索
+        vm._remoteUrlRequestByName = _remoteUrlRequestByName;
+        
+        _init();
+        
+        function _init(){
+            vm.filterBy = [];
+            vm.filterBySelect = [
+                {name: '按商品名称查询', id: 'name'},
+                {name: '按采购SKU号查询', id: 'SKU'}
+            ];
+        }
+
+        function _selectAutoComplete(selected) {
+            //autocomplete设置的id值index
+            var index = this.id;
+            if (selected) {
+                $scope.purchaseProducts[index].pprId = selected.originalObject.pprId;
+            } else {
+                $scope.purchaseProducts[index].pprId = null;
+            }
+        }
+
+        function _selectProduct($event, item) {
+            var $this = $($event.target),
+                pprId = item.pprId;
+            if(!pprId){
+                notificationService.notify('异常', '无相关产品');
+                return;
+            }
+            publishService.getSingleProduct(PRODUCT_DETAIL, {pprId: pprId}, null)
+                .then(function (product) {
+                    if ($.inArray(product.pprId, item.ppIds) < 0) {
+                        item.linkProducts.push(product);
+                        item.pprIds.push(product.pprId);
+                    }else{
+                        notificationService.notify('异常', '已经加过改产品');
+                    }
+                }, function (errResponse) {
+                    console.log(errResponse);
+                })
+        }
+
+        function _unlinkProduct($event, item, products) {
+            item.ppIds = _.without(item.ppIds, products.pprId);
+            item.linkProducts = _.without(item.linkProducts, products);
+            if(!item.ppIds.length){
+                vm.isLoadInfo = false;
+                item.isMain = 0;
+            }
+        }
+    }
+
+})();

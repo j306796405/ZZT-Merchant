@@ -1,0 +1,262 @@
+/***
+ * @author xiaodong.liu
+ * 非入库商品服务类
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .factory('product.publish.publishNoDeliveryService', publishNoDeliveryService);
+    publishNoDeliveryService.$inject = [
+        '$log',
+        '$http',
+        '$q',
+        'comp.rest.restAccessor'
+    ];
+    function publishNoDeliveryService($log, $http, $q, restAccessor) {
+
+
+        var selectedSpecMatrix = [];
+
+        var src = {};
+        var selected = {};
+
+        return {
+            _loadProductConfigure: loadProductConfigureFunc,
+            _selectSpecification: selectSpecificationFunc,
+            _isSpecValueSelected : isSpecValueSelectedFunc,
+            _updateSpecMatrix: updateSpecMatrixFunc,
+            _commonGet: commonGetFunc,
+            _commonPost: _commonPostFunc,
+            src:src,
+            selected:selected
+        };
+
+        function setValue(vm){
+            src=vm.src;
+            selected=vm.selected;
+        }
+
+        /***
+         * 根据分类加载商品配置内容（规格,属性,参数等)
+         * @type {loadProductConfigureFunc}
+         */
+        function loadProductConfigureFunc(vm) {
+            setValue(vm);
+            $http.get("/app/business/product/publish/view/nodelivery.json").then(function (response) {
+                var data = response.data;
+                src.specifications = data.specifications;
+                src.properties = data.attributes;
+                src.parameters = data.parameters;
+                console.log("data=" + src);
+            }, function () {
+
+            });
+        }
+
+        /***
+         * 选择规格
+         * @type {selectSpecificationFunc}
+         */
+
+        function selectSpecificationFunc() {
+            var selectedSpec = [];
+            resetSelectedSpecification();
+            var selectedSpecIndex = selected.specifications.specIndexList;
+            /***
+             * selected.specifications.specIndexList三个规格都选中（比如:颜色,尺寸,性别都选中)）["0","1","2"]
+             */
+            console.log("specIndexList="+angular.toJson(selected.specifications.specIndexList,true))
+            /***
+             * 根据selectedSpecIndex的值（即选中的规格)）,过滤掉未选中的值,得到选中的规格的数组下标
+             */
+            for (var i = 0; i < selectedSpecIndex.length; i++) {
+                var value = selectedSpecIndex[i];
+                if (value != -1) selectedSpec.push(value);
+                //将下标从小到大排序
+                selectedSpec.sort(function (a, b) {
+                    return a - b;
+                });
+
+            }
+            // alert("selectedSpec="+selectedSpec);
+            /***
+             * 重置选中的规格数组,将选中的规格重新赋值到selected.specifications.list里,实现页面动态刷新
+             * @type {Array}
+             */
+            //比如颜色,尺寸,性别这三个规格维度中选中颜色,尺寸;则selectedSpec里存的是[0,1]
+            var list = selected.specifications.list = [];
+            selectedSpecMatrix = new Array();
+            for (var j = 0; j < selectedSpec.length; j++) {
+                //将规格维度的值列表加入到规格数组里
+                //如果选中的是颜色,尺寸,则把颜色,尺寸里的值列表加入到规格数组里
+                //list[0]=[{"pvid": "229","name": "白色"},{"pvid": "230","name": "黄色"},{"pvid": "231","name": "蓝色"},{"pvid": "232","name": "黑色"},]
+                list.push(getSpecificationValueList(selectedSpec[j]));
+                selectedSpecMatrix.push(new Array());
+            }
+            console.log("===============SELECT selectedSpecMatrix="+angular.toJson(selectedSpecMatrix,true));
+        }
+
+        function getSpecificationValueList(index){
+            return src.specifications[index];
+        }
+        function resetSelectedSpecification(){
+            selected.specifications.list=[];
+            selected.specifications.finalSpecMatrixList=[];
+        }
+
+        function isSpecValueSelectedFunc(matrixIndex, pvId) {
+            console.log("isSpec="+selectedSpecMatrix.length+",matrixIndex="+matrixIndex+",pvId+"+angular.toJson(pvId,true));
+            //判断规格是否选中
+            console.log("selectedSpecMatrix=" + angular.toJson(selectedSpecMatrix,true));
+            // console.log("isSpecValueSelected find index=" + selectedSpecMatrix[matrixIndex].indexOf(pvId));
+            console.log("selectedSpecMatrix["+matrixIndex+"]=" + angular.toJson(selectedSpecMatrix[matrixIndex],true));
+            return  selectedSpecMatrix[matrixIndex].indexOf(pvId) >= 0;
+        }
+
+        this.updateSpecMatrix = updateSpecMatrixFunc;
+        function updateSpecMatrixFunc($event, matrixIndex, pvId) {
+            /***
+             *如果规格是选中的话,就将规格加到当前规格所在维度规格列表里;反之,从维度规格列表里删除
+             *比如,当前维度规格列表里选中[白色,黄色,蓝色];如果后面选中黑色,则把黑色加到列表里,变成
+             *[白色,黄色,蓝色,黑色]
+             */
+            var checkbox = $event.target;
+            var action = (checkbox.checked ? 'add' : 'remove');
+            updateSelected(action, matrixIndex, pvId);
+        }
+
+        var updateSelected = function (action, matrixIndex, pvId) {
+            /***
+             * selectedSpecMatrix里结构类似:
+             * selectedSpecMatrix[0]=[白色,黄色,蓝色]
+             * selectedSpecMatrix[1]=[S,M,L]
+             * selectedSpecMatrix[2]=[MAN,FEMALE]
+             * @type {Number|number}
+             */
+            var foundIndex = selectedSpecMatrix[matrixIndex].indexOf(pvId);
+            if (action == 'add' && foundIndex == -1) {
+                selectedSpecMatrix[matrixIndex].push(pvId);
+            }
+            if (action == 'remove' && foundIndex != -1) {
+                selectedSpecMatrix[matrixIndex].splice(foundIndex, 1);
+            }
+            console.log("selectedSpecMatrix[" + [matrixIndex] + "]=" + angular.toJson(selectedSpecMatrix[matrixIndex],true));
+            //["229:白色|228:S","240:深蓝色|228:S"]
+            //只有当选中的规格维度和可选的维度一样时候,才更新最终的规格组合矩阵finalSpecMatrixList
+            //比如,选中了颜色,尺寸;如果只在颜色里选的话,将不会更新规格组合矩阵finalSpecMatrixList
+            //只有颜色和尺寸里最少各挑选了一个值,才会更新finalSpecMatrixList,比如颜色里选红色,尺寸里选M
+            if (selectedSpecMatrix.length ==selected.specifications.list.length) {
+                var copySelectedSpecMatrix=angular.copy(selectedSpecMatrix);
+                var matrixList = buildSpecMartixList(copySelectedSpecMatrix);
+                console.log("matrixList=" + angular.toJson(matrixList,true));
+                /****
+                 * selected.specifications.finalSpecMatrixList=[
+                 * [{"name":"白色","pvid":"229"},{"name":"M","pvid":"229"}],
+                 * [{"name":"白色","pvid":"229"},{"name":"S","pvid":"228"}]
+                 * ]
+                 * @type {Array}
+                 */
+                var finalSpecMatrixList = selected.specifications.finalSpecMatrixList = [];
+                for (var i = 0, size = matrixList.length; i < size; i++) {
+                    var rowSpec = matrixList[i].split("|");
+                    var rowSpecArray = new Array(0);
+                    for (var ii = 0, length = rowSpec.length; ii < length; ii++) {
+                        var spec = {
+                            'name': '',
+                            'pvid': ''
+                        };
+                        spec.pvid = rowSpec[ii].split(":")[0];
+                        spec.name = rowSpec[ii].split(":")[1];
+                        rowSpecArray.push(spec);
+                    }
+
+                    finalSpecMatrixList[i] = rowSpecArray;
+                }
+            }
+
+        }
+
+        /***
+         * 构建规格表格数据
+         * @param selectedSpecMatrix
+         * @returns {*}
+         */
+        function buildSpecMartixList(specMatrix){
+            if(specMatrix.length==1){
+                var list = new Array(specMatrix[0].length);
+                for (var i = 0, length = list.length; i < length; i++) {
+                    list[i] = returnSpecValue(specMatrix[0][i]);
+                }
+                return list;
+            }else if(specMatrix.length>1){
+                return refreshSpecMatrix(specMatrix);
+            }
+            return [];
+        }
+        function refreshSpecMatrix(doubleArrays) {
+            var len = doubleArrays.length;
+            if (len >= 2) {
+                var len1 = doubleArrays[0].length;
+                var len2 = doubleArrays[1].length;
+                var newlen = len1 * len2;
+                var temp = new Array(newlen);
+                var index = 0;
+                for (var i = 0; i < len1; i++) {
+                    for (var j = 0; j < len2; j++) {
+                        temp[index] = returnSpecValue(doubleArrays[0][i]) + "|" + returnSpecValue(doubleArrays[1][j]);
+                        index++;
+                    }
+                }
+                var newArray = new Array(len - 1);
+                if (len > 2) {
+                    newArray[1] = doubleArrays[2];
+                }
+                newArray[0] = temp;
+                return refreshSpecMatrix(newArray);
+            } else {
+                return doubleArrays[0];
+            }
+
+        }
+
+        /***
+         * {
+          "pvid": "229",
+          "name": "白色"
+        }
+         */
+        function returnSpecValue(specValue) {
+            if(angular.isString(specValue)){
+                return specValue;
+            }
+            return specValue.pvid + ":" + specValue.name;
+        }
+
+        function commonGetFunc(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function _commonPostFunc(uri, pathVariable, data){
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+
+    }
+
+
+    /*****========NoDeliveryController end=========*****/
+})();

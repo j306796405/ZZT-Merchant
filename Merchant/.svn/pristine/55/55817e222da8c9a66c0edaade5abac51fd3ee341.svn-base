@@ -1,0 +1,39 @@
+/**!
+ * delivery.copy.controller
+ * @author jianglj
+ * @create 2016-05-06 13:05
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.DeliveryCopyController', DeliveryCopyController)
+
+    DeliveryCopyController.$inject = [
+        '$scope',
+        '$rootScope',
+        '$stateParams',
+        'product.publish.publishService',
+        'comp.util.arrayUtil',
+        'settings',
+        'FileUploader',
+        'comp.notification.notificationService',
+        'ngDialog'
+    ];
+
+    function DeliveryCopyController($scope, $rootScope, $stateParams, publishService, arrayUtil, settings, FileUploader, notificationService, ngDialog) {
+        var vm = this;
+        vm.MERCHANT = settings.backend.merchant,
+            vm.PICS = settings.backend.pics;
+
+        _init();
+
+        function _init(){
+            $scope.product.status.isCreateProduct = false;
+            $scope.product.status.isDelivery = true;
+            $scope.product = $stateParams.data;
+        }
+    }
+
+})();

@@ -1,0 +1,224 @@
+<div class="enter-wrapper" data-ng-init="info=vm.product.info">
+    <h1 class="review-title">商品基本信息</h1>
+    <pre>{{vm.product.info}}</pre>
+    <div class="pro-msg">
+        <form>
+            <p>
+                <label>商品分类：
+                    <select class="select-tab mr15">
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                    </select>
+                    <select class="select-tab mr15">
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                    </select>
+                    <select class="select-tab" data-ng-model="info.purchaseClass">
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                        <option value="">请选择</option>
+                    </select>
+                </label>
+            </p>
+            <p>
+                <label>品牌名称：
+                    <select class="select-tab" data-ng-model="info.brandCode">
+                        <option value="">请选择</option>
+                        <option value="1">NIKE</option>
+                        <option value="2">Lining</option>
+                    </select>
+                </label>
+            </p>
+            <p>
+                <label class="long">商品名称：
+                    <input type="text" data-ng-model="info.name"/>
+                </label>
+            </p>
+            <p>
+                <label class="desc-label long">商品卖点：
+                    <textarea data-ng-model="info.summary"></textarea>
+                </label>
+            </p>
+        </form>
+    </div>
+</div>
+<div class="enter-wrapper">
+    <h1 class="review-title">商品规格<span class="f12 ml20"><em class="encoded">规格组编码：<font
+            class="red">12167161216716</font></em><em class="encoded-edit">规格组编码：<input type="text">
+        <button
+                type="button" class="btn btn-success btn-sm mr5">确定
+        </button>
+        <button type="button"
+                class="btn btn-warning btn-sm">取消
+        </button>
+    </em><a
+            class="encoded-btn" href="javascript:void(0)">编辑</a><a id="look1" class="look" href="javascript:void(0)">查看相同规格组编码商品</a><a
+            class="look" id="look2" href="javascript:void(0)">什么是规格组编码？</a></span></h1>
+   <!-- <pre>{{vm.src.specifications}}</pre>-->
+    <div data-ng-init="selectedSpecifications=vm.selected.specifications">
+        <label class="mr20" data-ng-repeat="spec in vm.src.specifications">
+            <input type="checkbox" data-ng-model="selectedSpecifications.specIndexList[$index]"
+                   data-ng-click="vm.selectSpecification()"
+                   ng-true-value="'{{$index}}'" ng-false-value="'-1'"
+                   class="table-check check-element">{{spec.showName}}-{{vm.selected.specifications.specIndexList[$index]}}
+        </label>
+    </div>
+    <div data-ng-repeat="spec in vm.selected.specifications.list" data-ng-init="specIndex=$index">
+        <span class="format-title">{{spec.showName}}</span>
+        <div class="format clearfix">
+            <span data-ng-repeat="specItem in spec.values">
+                <label>{{itemIndex}}
+                    <input type="checkbox" id={{specItem.pvId}} ng-checked="vm.isSpecValueSelected(specIndex,specItem)"
+                           ng-click="vm.updateSpecMatrix($event,specIndex,specItem)"
+                           data-ng-click="vm.checkOnSpecMatrix(specIndex,$index)"
+                           name="{{'spec_'+spec.ppId+'_'+specItem.pvid}}" class="table-check">
+                    {{specItem.name}}
+                </label>
+            </span>
+            <span class="hide" id="format-add">
+                <input type="checkbox" name="size" class="table-check">
+                <input type="text" class="size-fillin">
+                <a href="javascript:void(0)" class="x">X</a>
+            </span>
+            <span>
+                <input type="checkbox" name="size" class="table-check">
+                <input type="text" class="size-fillin">
+                <a href="javascript:void(0)" class="x">X</a>
+            </span>
+            <em class="add">
+                <input type="text" class="add-input" name="format">
+                <a class="btn btn-success btn-sm" href="javascript:;">+添加</a>
+            </em>
+        </div>
+    </div>
+    <span class="format-title">已选商品规格</span>
+    <pre>vm.product.productSpecifications={{vm.product.productSpecifications}}</pre>
+<!--    <pre>{{vm.selected.specifications.finalSpecMatrixList.length}}</pre>-->
+    <pre>vm.selected.specifications.finalSpecMatrixList={{vm.selected.specifications.finalSpecMatrixList}}</pre>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th data-ng-repeat="spec in vm.selected.specifications.list">{{spec.showName}}</th>
+            <th>厂商指导价（元）</th>
+            <th>海关HS编码</th>
+            <th>净重（KG)</th>
+            <th>毛重（KG)）</th>
+            <th>货号</th>
+            <th>条形码</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr data-ng-repeat="specMatrixItem in vm.selected.specifications.finalSpecMatrixList"
+            data-ng-init="specInfo =vm.product.productSpecifications[$index]={};specInfo.specifications=specMatrixItem">
+           <td data-ng-repeat="specValue in specMatrixItem">{{specValue.name}}</td>
+            <td><input type="text" data-ng-model="specInfo.SETTLE_AMOUNT"></td>
+            <td><input type="text" data-ng-model="specInfo.HS_CODE"></td>
+            <td><input type="text" data-ng-model="specInfo.NET_WEIGHT"></td>
+            <td><input type="text" data-ng-model="specInfo.GROSS_WEIGHT"></td>
+            <td><input type="text" data-ng-model="specInfo.PR_NO"></td>
+            <td><input type="text" data-ng-model="specInfo.BARCODE"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="hint">厂商指导价 / 默认销售价 / 默认库存 为必填项</p>
+</div>
+<!--<div class="enter-wrapper">
+    <h1 class="review-title">商品图片</h1>
+    <ul class="pic-list">
+        <li class="rel">
+            <img src="../img/pro-pic.jpg" width="100%" alt=""/>
+            <a href="javascript:void(0)" class="cancel disabledbg">
+                <img src="../img/cancel.png" alt=""/>
+            </a>
+            <a href="javascript:void(0)" class="sort sort-l"></a>
+            <a href="javascript:void(0)" class="sort sort-r"></a>
+        </li>
+        <li class="rel">
+            <img src="../img/pro-pic.jpg" width="100%" alt=""/>
+            <a href="javascript:void(0)" class="cancel">
+                <img src="../img/cancel.png" alt=""/>
+            </a>
+            <a href="javascript:void(0)" class="sort sort-l"></a>
+            <a href="javascript:void(0)" class="sort sort-r"></a>
+        </li>
+        <li class="rel">
+            <img src="../img/pro-pic.jpg" width="100%" alt=""/>
+            <a href="javascript:void(0)" class="cancel">
+                <img src="../img/cancel.png" alt=""/>
+            </a>
+            <a href="javascript:void(0)" class="sort sort-l"></a>
+            <a href="javascript:void(0)" class="sort sort-r"></a>
+        </li>
+        <li class="rel">
+            <img src="../img/pro-pic.jpg" width="100%" alt=""/>
+            <a href="javascript:void(0)" class="cancel">
+                <img src="../img/cancel.png" alt=""/>
+            </a>
+            <a href="javascript:void(0)" class="sort sort-l"></a>
+            <a href="javascript:void(0)" class="sort sort-r"></a>
+        </li>
+        <li class="rel">
+            <img src="../img/pro-pic.jpg" width="100%" alt=""/>
+            <a href="javascript:void(0)" class="cancel">
+                <img src="../img/cancel.png" alt=""/>
+            </a>
+            <a href="javascript:void(0)" class="sort sort-l"></a>
+            <a href="javascript:void(0)" class="sort sort-r"></a>
+        </li>
+        <li class="pic-add rel">
+            <input type="file" class="file" multiple="multiple"/>
+            <a href="javascript:void(0)">
+            </a>
+        </li>
+    </ul>
+    <p class="hint">上传图片最大500K；长宽为1:1(正方形)；最多可上传8张，最少须上传1张</p>
+</div>-->
+<div class="enter-wrapper" data-ng-init="properties=vm.src.properties;selectedProperties=vm.product.properties">
+    <h1 class="review-title">商品属性</h1>
+     <pre>{{selectedProperties}}</pre>
+    <div class="pro-msg property">
+        <form>
+            <!-- 0:单选 1:输入  2:多选 -->
+            <ul class="pro-property-box clearfix" ng-repeat="group in vm.src.properties">
+                <li ng-show="($parent.$index % 3 == 0) && ($parent.$index + 3 > $index) && ($parent.$index <= $index)"
+                    data-ng-repeat="propertyItem in vm.src.properties">
+                    <label data-ng-init="selectedProperties[$index]={};selectedProperties[$index].ppId=propertyItem.ppId;selectedProperties[$index].isText=0;selectedProperties[$index].pvIds=[];" ng-switch={{propertyItem.multiSelect}}><em data-ng-if="propertyItem.required=1" class="star">*</em><i>{{propertyItem.showName+":"}}</i>
+
+                        <select ng-switch-when="0" data-ngclass="select-tab" data-ng-model="selectedProperties[$index].pvIds[0]" name="{{propertyItem.ppId}}>
+                            <option value="">请选择</option>
+                        <option data-ng-repeat="value in propertyItem.values" value="{{value.pvid}}">{{value.name}}
+                        </option>
+                        </select>
+                        <input ng-switch-when="1" data-ng-init="selectedProperties[$index].isText=1;" type="text" name="{{propertyItem.ppId}}" data-ng-model="selectedProperties[$index].pvIds[0]" ng-trim="true">
+                         <span class="checkgroup" ng-switch-when="2">
+                               <label data-ng-repeat="value in propertyItem.values">
+                                   <input type="checkbox" class="table-check" data-ng-model="selectedProperties[$parent.$index].pvIds[$index]"
+                                          ng-true-value="'{{value.pvid}}'" ng-false-value="'-1'"
+                                          name="{{propertyItem.ppId}}">{{value.name}}
+                               </label>
+
+                         </span>
+                    </label>
+                </li>
+            </ul>
+        </form>
+    </div>
+</div>
+<div class="enter-wrapper">
+    <h1 class="review-title">商品参数<a href="javascript:void(0)" class="parameter-btn">自定义参数</a>
+    </h1>
+    <div>
+        <span class="custom" data-ng-repeat="parameterItem in vm.src.parameters">
+            <label>{{parameterItem.showName+":"}}</label>
+            <input type="text" name="{{parameterItem.ppId}}" ng-trim="true"/>
+        </span>
+
+        <span class="custom edit hide" id="custom-edit">
+            <input type="text" placeholder="自定义参数"/>
+            <input type="text" placeholder="自定义参数值"/>
+            <a href="javascript:void(0)" class="x">X</a>
+        </span>
+    </div>
+</div>

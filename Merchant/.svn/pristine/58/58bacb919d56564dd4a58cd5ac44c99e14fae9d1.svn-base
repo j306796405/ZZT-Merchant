@@ -1,0 +1,184 @@
+/**!
+ * main.controller.js
+ * @author jianglj
+ * @create 2016-04-18 11:11
+ */
+(function() {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.list.MainController', mainController);
+
+    mainController.$inject = [
+        '$controller',
+        '$state',
+        '$scope',
+        'product.list.service',
+        'comp.notification.notificationService',
+        'ngDialog',
+        'comp.session.sessionService'
+    ];
+    function mainController($controller, $state, $scope,listService,notificationService,ngDialog,sessionService) {
+        $scope._init = _init;
+
+        //$scope.queryProudct = queryProductFuc;
+        $controller('comp.ext.controller.PaginationDataGridController', {$scope: $scope});
+        /** 实现 PaginationDataGridController 的抽象方法 */
+        $scope.getCollection = queryProductFuc;
+
+        $scope.upApply = upApplyFunc;
+        $scope.downApply = downApplyFunc;
+        $scope.cancelApply = cancelApplyFunc;
+
+        /**审核数据模型 */
+        $scope.apply ={
+            psCode:'',
+            version:'',
+            type:'',
+            meno:''
+        };
+
+        $scope.panes = [{
+            title: '全部',
+            total: '0',
+            value: ''
+        }, {
+            title: '已上架',
+            total: '0',
+            value: '1'
+        }, {
+            title: '已下架',
+            total: '0',
+            value: '0'
+        }, {title: '上架审核中',
+            total: '00',
+            value: '00'
+        }, {
+            title: '下架审核中',
+            total: '0',
+            value: '10'
+        }];
+        _init();
+        function _init() {
+            getCategory();
+            getBrands();
+        }
+
+        function queryProductFuc(value) {
+           
+            console.log('++++++++');
+            console.log(value);
+            value.brandCode = value.selectBrand.code;
+            delete value.selectBrand;
+            value.pcCode = value.selectCategory.code;
+            delete value.selectCategory;
+            console.log(value);
+
+           return listService.getProductList(value).then(
+                function(response) {
+                    $scope.data = response.data;
+                    return {
+                        total_count: response.headers['x-total-count'],
+                        collection: response.data
+                    };
+                },
+                function(errMsg) {
+                    notificationService.notify('异常', errMsg);
+                }
+            );
+        }
+        /*
+           上下架申请
+         */
+        function upApplyFunc(psCode,version,type) {
+            $scope.apply.psCode =psCode;
+            $scope.apply.version =version;
+            $scope.apply.type =type;
+            ngDialog.openConfirm({
+            template: 'upApplyDialogId',
+            className: 'ngdialog-theme-default',
+                }).then(function () {
+                    upAndDownDataFunc($scope.apply);
+                }, function () {
+                });
+        }
+        
+        function downApplyFunc(psCode,version,type) {
+            $scope.apply.psCode =psCode;
+            $scope.apply.version =version;
+            $scope.apply.type =type;
+            ngDialog.openConfirm({
+                template: 'downApplyDialogId',
+                className: 'ngdialog-theme-default',
+            }).then(function () {
+                upAndDownDataFunc($scope.apply);
+            }, function () {
+            });
+        }
+        function upAndDownDataFunc(apply) {
+             listService.upAndDownProductApply(apply).then(
+                function (data) {
+                    queryProductFuc();
+                },
+                function(errMsg) {
+                notificationService.notify('异常', errMsg);
+            }
+            );
+        }
+        /*
+        取消上下架审核
+         */
+        function cancelApplyFunc(paId) {
+            ngDialog.openConfirm({
+                    template: 'cancelApplyDialogId',
+                    className: 'ngdialog-theme-default'
+                })
+                .then(function(){
+                    cancelApplyDataFunc(paId);
+                }, function(){
+                });
+        }
+        function cancelApplyDataFunc(paId) {
+            listService.cancelApply(paId).then(
+                function (data) {
+                    queryProductFuc();
+                },
+                function(errMsg) {
+                    notificationService.notify('异常', errMsg);
+                }
+            );
+        }
+        
+        function getCategory() {
+            //var saCode = sessionService.getSessionFromCache().saCode;
+            var saCode = '200002';
+            listService.getCategory(saCode).then(
+                function (data) {
+                    data.unshift({"code":"","name":"请选择"});
+                    $scope.categorys = data;
+                    $scope.filter.selectCategory =data[0];
+                },
+                function(errMsg) {
+                    notificationService.notify('异常', errMsg);
+                }
+            );
+        }
+
+        function getBrands() {
+            //var saCode = sessionService.getSessionFromCache().saCode;
+            var saCode = '200002';
+            listService.getBrands(saCode).then(
+                function (data) {
+                    data.unshift({"code":"","name":"请选择"});
+                    $scope.brands = data;
+                    $scope.filter.selectBrand =data[0];
+                },
+                function(errMsg) {
+                    notificationService.notify('异常', errMsg);
+                }
+            );
+        }
+    }
+
+})();

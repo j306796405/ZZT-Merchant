@@ -1,0 +1,45 @@
+<div>
+    <div>详情</div>
+    <h1 class="channel-title">
+        <b>发布销售商品</b>
+        <a href="商品审核记录.html" target="_blank">商品审核记录</a>
+    </h1>
+    <div class="panel" ng-tabs>
+        <div class="panel-body whitebg pd20">
+            <div class="panel-heading navy-blue">
+                <ul class="tabnav nav-tabs">
+                    <li ng-tab-head>
+                        <a href="javascript:;" ng-click="tabs._goInfo(product.psCode)">商品基础信息</a>
+                    </li>
+                    <li ng-tab-head>
+                        <a href="javascript:;" ng-click="tabs._goPurchase()">商品价格/库存/渠道</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane" ng-tab-body="">
+                    <div class="enter-wrapper">
+                        <h1 class="review-title">商品是否已入喆兔仓？
+                            <span class="hint">（商品保存后将无法修改是否入仓选项）<em class="star">*</em></span>
+                        </h1>
+                        <label class="check-label mr15">
+                            <input type="radio" name="isDelivery" class="table-check check-element mr5" disabled
+                                   data-ng-checked="product.status.isDelivery === true ? true : false">
+                            是
+                        </label>
+                        <label class="check-label mr15">
+                            <input type="radio" name="isDelivery" class="table-check check-element mr5" disabled
+                                   data-ng-checked="product.status.isDelivery === false ? true : false">
+                            否
+                        </label>
+                    </div>
+                    <div ui-view=""></div>
+                </div>
+                <div class="tab-pane" ng-tab-body="">
+                    <div ui-view="purchase"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>

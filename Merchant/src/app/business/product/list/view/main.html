@@ -1,0 +1,160 @@
+<div data-ng-controller="product.list.MainController">
+  <div class="select-area">
+    <form id="queryForm">
+        <span>
+            <label>商品名称：</label>
+            <input type="text" ng-model="filter.name" name="name"/>
+        </span>
+        <span>
+            <label>商品编号：</label>
+            <input type="text" ng-model="filter.psCode"/>
+        </span>
+        <span>
+            <label>商品分类：</label>
+            <select data-ng-model="filter.selectCategory"
+                    ng-options="category.name  for category in categorys track by category.code" required/>
+        </span>
+        <span>
+            <label>商品品牌：</label>
+            <select data-ng-model="filter.selectBrand"
+                    ng-options="brand.name  for brand in brands track by brand.code" required/>
+        </span>
+        <span>
+            <label>商品状态：</label>
+
+            <select ng-model="filter.state" data-ng-checked="changeStates();">
+                <option ng-repeat="pane in panes" value="{{pane.value}}" id="state">{{pane.title}}</option>
+            </select>
+        </span>
+        <span class="last-line">
+            <label>是否入库：</label>
+            <select ng-model="filter.isWarehose">
+                <option value="">请选择</option>
+                <option value="1">入库</option>
+                <option value="0">不入库</option>
+            </select>
+        </span>
+    </form>
+    <div class="select-btn">
+      <button class="btn btn-default" type="reset" data-ng-click="reset();">重置</button>
+      <button class="btn btn-success" type="button" data-ng-click="listData();">查询</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-heading navy-blue">
+      <tabs>
+        <pane ng-repeat="pane in panes" title="{{pane.title}}" total="{{pane.total}}"
+              callback="changeStates(pane.value)">
+        </pane>
+      </tabs>
+    </div>
+    <div class="panel-body whitebg pd20">
+      <div class="tab-content">
+        <div class="tab-pane active">
+          <table class="table table-hover tab1-table" id="userTable">
+            <thead>
+            <tr>
+              <th>商品图片</th>
+              <th>商品名称</th>
+              <th>品牌</th>
+              <th>商品编号</th>
+              <th>销售价(元)</th>
+              <th>销售库存</th>
+              <th>是否入库</th>
+              <th>商品状态</th>
+              <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <tr ng-repeat="item in data ">
+
+              <td>
+                <img ng-src="{{item.picUrl | f_picUrl}}" width="58" height="58" class="pro-img"/>
+              </td>
+              <td>
+                {{item.name}}
+              </td>
+              <td>
+                {{item.chineseName+"/"+item.englishName}}
+              </td>
+              <td>
+                {{item.psCode}}
+              </td>
+              <td>
+                <span id="sellPrice" data-ng-bind-html="item.sellPrice | f_atreplace"></span>
+              </td>
+              <td>
+                <span id="sellNums" data-ng-bind-html="item.sellNums | f_atreplace"></span>
+              </td>
+              <td>
+                {{item.isWarehose | f_yes_no}}
+              </td>
+              <td>
+                {{item.stateName}}
+              </td>
+              <td>
+                <a class="btn btn-primary btn-sm"
+                   ui-sref="xcore.product_copy({psCode: item.psCode, isDelivery: item.isWarehose})"
+                   ui-sref-opts="{location: false}"
+                   data-ng-if="+item.isWarehose">复制</a>
+                <a class="btn btn-danger btn-sm unshelve mr5" data-ng-if="item.stateName == '已下架' && item.sellPrice != null"
+                   data-ng-click="upApply(item.psCode,item.version,'0');">申请上架</a>
+                <a class="btn btn-danger btn-sm shelve mr5" data-ng-if="item.stateName == '已上架'"
+                   data-ng-click="downApply(item.psCode,item.version,'1');">申请下架</a>
+                <a class="btn btn-warning btn-sm cancel-shelve mr5"
+                   data-ng-if="item.stateName == '下架待审核'||item.stateName == '上架待审核' "
+                   data-ng-click="cancelApply(item.paId);">取消审核</a>
+                <a class="btn btn-primary btn-sm"
+                   ui-sref="xcore.product_detail({psCode: item.psCode, tabIndex: 0, isDelivery: item.isWarehose})"
+                   ui-sref-opts="{location: false}"
+                   ng-class="{'diabled-class': shelve}">编辑
+                </a>
+                <!--ng-disabled="item.stateName == '已上架'"-->
+              </td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <xc-pagination xhr-processing="xhrProcessing" pagination="pagination"/>
+  </div>
+  <!--上架申请dialog-->
+  <script type="text/ng-template" id="upApplyDialogId">
+    <div class="ngdialog-message">
+      <i class="zzticon icon-l warning"></i>确定要申请上架吗？<br/><br/>
+      <small>审核通过后，商品开始售卖！</small>
+      <br/>
+    </div>
+    <div class="ngdialog-buttons">
+      <button type="button" class="ngdialog-button btn btn-success" ng-click="confirm()">确 认</button>
+      <button type="button" class="ngdialog-button easyDialogNoBtn" ng-click="closeThisDialog('Cancel')">取 消</button>
+    </div>
+  </script>
+  <!--下架申请dialog-->
+  <script type="text/ng-template" id="downApplyDialogId">
+    <form name="aaa">
+
+      <div class="ngdialog-message">
+        <textarea placeholder="请输入申请下架原因！" style="width: 316px; resize: none;" rows="8" cols="65" class="form-control"
+                  data-ng-model="meno" required ></textarea><br/>
+        <span class="f12">审核通过后，商品停止售卖。</span>
+      </div>
+      <div class="ngdialog-buttons">
+        <button type="button" class="ngdialog-button btn btn-success" ng-click="confirm(meno)">确 认</button>
+        <button type="button" class="ngdialog-button easyDialogNoBtn" ng-click="closeThisDialog('Cancel')">取 消</button>
+      </div>
+    </form>
+  </script>
+  <!--取消申请dialog-->
+  <script type="text/ng-template" id="cancelApplyDialogId">
+    <div class="ngdialog-message">
+      <i class="zzticon icon-l warning"></i>确定要取消上/下架申请吗？<br/>
+    </div>
+    <div class="ngdialog-buttons">
+      <button type="button" class="ngdialog-button btn btn-success" ng-click="confirm()">确 认</button>
+      <button type="button" class="ngdialog-button easyDialogNoBtn" ng-click="closeThisDialog('Cancel')">取 消</button>
+    </div>
+  </script>
+</div>

@@ -1,0 +1,292 @@
+/**!
+ * publish.service.js
+ * @author jianglj
+ * @create 2016-04-19 09:49
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .factory('product.publish.publishService', publishService);
+    publishService.$inject = [
+        '$log',
+        '$http',
+        '$q',
+        'comp.rest.restAccessor',
+        'comp.notification.notificationService'
+    ];
+    function publishService($log, $http, $q, restAccessor, notificationService) {
+
+        return {
+            getProductInfo: getProductInfo,
+            getSingleProduct: getSingleProduct,
+            createDelivery: createDelivery,
+            copyDelivery: copyDelivery,
+            getDeliveryDetail: getDeliveryDetail,
+            updateDeliveryDetail: updateDeliveryDetail,
+            filterSelectedCheckboxs: filterSelectedCheckboxs,
+            validateCode: validateCode,
+            getPurchase: getPurchase,
+            getPurchaseDetail: getPurchaseDetail,
+            updateMultiple: updateMultiple,
+            updateUnified: updateUnified,
+            addProduct: addProduct,
+            getChannels: getChannels,
+            _selectAutoComplete: _selectAutoComplete,
+            _unlinkProduct: _unlinkProduct,
+            //下拉请求封装
+            _remoteUrlRequestMake: _remoteUrlRequestMake,
+            _purchaseProductSearch: _purchaseProductSearch
+        };
+
+        function getProductInfo(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getSingleProduct(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function createDelivery(uri, pathVariable, data) {
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function copyDelivery(uri, pathVariable, data) {
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getDeliveryDetail(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateDeliveryDetail(uri, pathVariable, data) {
+            return restAccessor.patch(uri, pathVariable, data).then(
+                function (response) {
+                    return response.data;
+                },
+                function (errResponse) {
+                    return $q.reject(errResponse.data.message);
+                }
+            );
+        }
+
+        function filterSelectedCheckboxs(array) {
+            var values = [];
+            _.each(array, function (item, index) {
+                if (!!item && !!(+item.select)) {
+                    values.push(item);
+                }
+            })
+            return values;
+        }
+
+        function validateCode(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+        
+        function getPurchase(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getPurchaseDetail(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateMultiple(uri, pathVariable, data){
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateUnified(uri, pathVariable, data){
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        //关联产品的验证流程
+        function addProduct($event, item, delivery, purchaseProducts, index, url){
+            var isValid = true,
+                pprId = item.pprId,
+                outSku = item.outSku,
+                whCode = delivery.whCode,
+                tasks = [validateProduct, validateProductsLen_1, validateProductsLen_2];
+
+            _.each(tasks, function(ruleFunc, i){
+                if(isValid){
+                    ruleFunc();
+                }
+            })
+
+            function validateProduct(){
+                if(!pprId){
+                    notificationService.notify('异常', '无相关产品');
+                    return isValid = false;;
+                }
+            }
+
+            //关联数量为1 只能添加相同SKU且不同仓库的产品
+            function validateProductsLen_1(){
+                if(purchaseProducts.length === 1){
+                    //关联数量为1 只能添加相同SKU且不同仓库的产品
+                    _.each(item.batchProducts, function(o, i){
+                        if(o.pprId === pprId){
+                            notificationService.notify('异常', '不能添加同种批次的同种产品');
+                            return isValid = false;
+                        }
+                    })
+                }
+            }
+            // 关联数量大于1 同一个sku只能在一个模块中添加 同一个sku 同一个批次只能添加一次
+            function validateProductsLen_2(){
+                if(purchaseProducts.length > 1){
+                    _.each(purchaseProducts, function(o, i){
+                        if((i !== index) && (o.sku === outSku)){
+                            notificationService.notify('异常', '该产品在其他模块中已添加');
+                            return isValid = false;
+                        }
+                    })
+                    if(isValid){
+                        _.each(item.batchProducts, function(o, i){
+                            if(o.pprId === pprId ){
+                                notificationService.notify('异常', '该批次已添加');
+                                return isValid = false;
+                            }
+                        })
+                    }
+                }
+            }
+
+            if(isValid){
+                getSingleProduct(url, {pprId: pprId}, null)
+                    .then(function (product) {
+                        item.batchProducts.push(product);
+                        item.pprIds.push(product.pprId);
+                        item.sku = outSku;
+                        delivery.whCode = product.whCode;
+                    }, function (errResponse) {
+                        notificationService.notify('异常', errResponse);
+                    })
+            }
+        }
+        
+        function getChannels(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+        
+        function _selectAutoComplete(selected, item){
+            //autocomplete设置的id值index
+            if (selected) {
+                item.pprId = selected.originalObject.pprId;
+                item.outSku = selected.originalObject.outSku;
+                item.whCode = selected.originalObject.whCode;
+            } else {
+                item.pprId = null;
+                item.outSku = '';
+                item.whCode = '';
+            }
+        }
+
+        function _unlinkProduct($event, index, item, vm) {
+            item.batchProducts.splice(index, 1);
+            item.pprIds.splice(index, 1);
+            //关联产品都被清空后 放开搜索的sku限制 清除产品详情信息
+            if(!item.pprIds.length){
+                item.sku = '';
+            }
+            //复制商品时，取消关联陈品是 isMain不变
+            if(!item.pprIds.length && item.isMain && !item.pcCode){
+                vm.isLoadInfo = false;
+                item.isMain = 0;
+            }
+        }
+
+        function _remoteUrlRequestMake(request, baCode, item, delivery){
+            request.baCode = baCode;
+            if(item.sku){
+                request.sku = item.sku;
+            }
+            if(item.pcCode){
+                request.pcCode = item.pcCode;
+            }
+            if(delivery.whCode && delivery.purchaseProducts.length > 1){
+                request.whCode = delivery.whCode;
+            }
+            return request;
+        }
+        
+        function _purchaseProductSearch(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+    }
+
+})();

@@ -1,0 +1,192 @@
+/**!
+ * main.controller.js
+ * @author jianglj
+ * @create 2016-04-18 11:11
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.MainController', mainController)
+
+    mainController.$inject = [
+        '$state',
+        '$scope',
+        '$rootScope',
+        'product.publish.publishService',
+        'comp.notification.notificationService',
+        '$q'
+    ];
+    function mainController($state, $scope, $rootScope, publishService, notificationService, $q) {
+        var vm = this,
+        //查询销售商品的关联采购商品信息
+            PURCHASE = '/product/inWarehouse/stock-price/get-purchase/:psCode',
+        //查询销售商品的关联采购商品详情信息
+            PURCHASE_DETAIL = '/product/inWarehouse/stock-price/get/:psCode',
+        //查询所有渠道
+            CHANNELS = '/product/sale-channels';
+        $scope.urls = {
+            PURCHASE: '',
+            PURCHASE_DETAIL: '',
+            CHANNELS: '',
+            //根据是否入仓修改公用路径
+            _changeUrlsByDelivery: _changeUrlsByDelivery
+        }
+
+        //统一设置库存/价格 true, 分渠道设置价格/库存 false
+        vm.isCommonSet = true;
+        $scope.product = {
+            psCode: '',
+            _setPsCode: function(psCode){
+                this.psCode = psCode;        
+            },
+            delivery: {},
+            status: {
+                //商品价格/库存 创建=1(默认) || 修改=2 || 拷贝=3
+                isCreate: 1,
+                //入仓 || 不入仓
+                isDelivery: '',
+                //产品是否已经保存
+                isSave: false,
+                //修改产品状态 isCreate, isDelivery, isSave
+                _changeProductStatus: _changeProductStatus
+            }
+        }
+
+        //更改渠道
+        vm._changeChannel = _changeChannel;
+        //获取
+        vm._getPurchaseDetail = _getPurchaseDetail;
+        //判断入仓还是不入仓 来加载对应state
+        vm._isDelivery = _isDelivery;
+        $scope.tabs = {
+            //默认选中第一个tab
+            index: 1,
+            //点击商品信息tab
+            _goProduct: _goProduct,
+            //点击商品价格/库存/渠道tab
+            _goPurchase: _goPurchase
+        }
+        
+        function _changeProductStatus(isCreate, isDelivery, isSave){
+            this.isCreate = isCreate;
+            this.isDelivery = isDelivery;
+            this.isSave = isSave;
+        }
+
+        function _changeUrlsByDelivery(isDelivery){
+            if(isDelivery){
+                this.PURCHASE = '/product/inWarehouse/stock-price/get-purchase/:psCode';
+                this.PURCHASE_DETAIL = '/product/inWarehouse/stock-price/get/:psCode';
+                this.CHANNELS = '/product/sale-channels';
+            }else{
+                this.PURCHASE = '';
+                this.PURCHASE_DETAIL = '';
+                this.CHANNELS = '';
+            }
+        }
+
+        function _goProduct(){
+            /*if($rootScope.product.status.isCreate === 1){
+                $state.go('xcore.product_publish');
+            }*/
+        }
+
+        function _goPurchase(copiedPsCode){
+            var promise,
+                PURCHASE_EVENT= 'getPurchaseData',
+                success = function (purchase) {
+                    $scope.$broadcast(PURCHASE_EVENT, purchase);
+                },
+                failure = function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                };
+            switch($scope.product.status.isCreate)
+            {
+                //创建
+                case 1:
+                    //response需要返回channels
+                    $q.all([
+                        publishService.getPurchase(PURCHASE, {psCode: $scope.product.psCode}, null),
+                        publishService.getChannels(CHANNELS, null, null)
+                    ]).then(
+                        function(data){
+                            var purchase = data[0];
+                            var channels = data[1];
+                            $scope.$broadcast(PURCHASE_EVENT, {
+                                purchase: purchase,
+                                channels: channels
+                            });
+                        },
+                        function (errMsg) {
+                            errMsg[0] ? notificationService.notify('异常', errMsg[0]) : '';
+                            errMsg[1] ? notificationService.notify('异常', errMsg[1]) : '';
+                        }
+                    );
+                    break;
+                //编辑
+                case 2:
+                    promise = publishService.getPurchase(PURCHASE_DETAIL, {psCode: $scope.product.psCode}, null);
+                    promise.then(success, failure);
+                    break;
+                //拷贝
+                case 3:
+                    $q.all([
+                        publishService.getPurchase(PURCHASE_DETAIL, {psCode: $scope.product.psCode}, null),
+                        publishService.getPurchase(PURCHASE_DETAIL, {psCode: copiedPsCode}, null)
+                    ]).then(
+                        function(purchases){
+                            $scope.$broadcast(PURCHASE_EVENT, {
+                                purchase: purchases[0],
+                                purchaseCopied: purchases[1]
+                            });
+                        },
+                        function (errMsg) {
+                            errMsg[0] ? notificationService.notify('异常', errMsg[0]) : '';
+                            errMsg[1] ? notificationService.notify('异常', errMsg[1]) : '';
+                        }
+                    );
+            }
+            $scope.tabs.index = 2;
+        }
+
+        function _isDelivery(isDelivery, bool) {
+            isDelivery = bool;
+            if (bool) {
+                $state.go('xcore.product_publish.delivery');
+            }else{
+                $state.go('xcore.product_publish.not_delivery');
+            }
+        }
+
+        function _changeChannel(form, isChecked, multiple, channel, psCode, index) {
+            if (isChecked) {
+                multiple[index] = {
+                    scCode: channel.scCode,
+                    name: channel.name,
+                    psCode: psCode
+                }
+            } else {
+                multiple[index] = undefined
+            }
+        }
+
+        function _getPurchaseDetail() {
+            publishService
+                .getPurchase(PURCHASE_DETAIL, {psCode: $scope.product.psCode}, null)
+                .then(function (purchase) {
+                    if (+purchase.sellType === 0) {
+                        $scope.product.unified = purchase.productStockPrices[0];
+                    } else {
+                        $scope.product.multiple = purchase.productStockPrices; 
+                    }
+                    vm.isCreate = false;
+                    vm.purchase = purchase.batchProducts;
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                });
+        }
+    }
+
+})();

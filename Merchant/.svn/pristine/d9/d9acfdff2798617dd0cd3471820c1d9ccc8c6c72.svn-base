@@ -1,0 +1,321 @@
+/**!
+ * not-delivery.controller
+ * 创建非入仓商品控制器
+ * @author xiaodong.liu
+ * @create 2016-05-07 14:23
+ */
+(function () {
+  'use strict';
+
+  angular
+    .module('xcore.biz.product')
+    .controller('product.publish.main.notDelivery.info', NotDeliveryController)
+
+  NotDeliveryController.$inject = [
+    '$scope',
+    '$state',
+    'product.publish.publishNoDeliveryService',
+    'notDelivery.urls',
+    'comp.notification.notificationService',
+    '$q',
+    'comp.util.arrayUtil',
+    'comp.session.sessionService'
+  ];
+
+  function NotDeliveryController($scope, $state, publishNoDeliveryService, notDeliveryUrls, notificationService, $q, arrayUtil, sessionService) {
+    var vm = this,
+      createUrls = notDeliveryUrls.create,
+      detailUrls = notDeliveryUrls.detail,
+    // 一级采购分类
+      FIRST_CATEGORY = createUrls.firstCategory,
+    //联动采购分类
+      OTHER_CATEGORY = createUrls.otherCategory,
+    //采购商品分类/属性/规格/参数/品牌查询
+      PRODUCT_INFO = createUrls.detail,
+    // 品牌
+      BRANDS = createUrls.brands,
+    //创建入仓商品请求参数
+      CREATE_PRODUCT = createUrls.create,
+    //保税区
+      BONEDAREA = createUrls.bonedArea;
+
+    vm.isLoadInfo = false;
+    vm.product = {
+      info: {},
+      //提交的specifications数据
+      productSpecifications: [],
+      //储存ajax请求中的specifications
+      specifications: [],
+      //储存选中对象
+      specificationsObjects: [],
+      properties: [],
+      parameters: [],
+      pics: [],
+      detailDesc: '',
+      bonedArea: []
+    }
+
+    $scope.//记录specifications checkbox的选中状态
+      vm.checkboxs = [];
+
+    //一级采购分类查询
+    vm._getFirstCategory = _getFirstCategory;
+    //二级采购分类查询
+    vm._getSecondCategory = _getSecondCategory;
+    //三级采购分类查询
+    vm._getThirdCategory = _getThirdCategory;
+    //初始化
+    vm._init = _init;
+    //加载产品信息
+    vm._loadProductInfo = _loadProductInfo;
+    //新增规格
+    vm._addEmptySpecification = _addEmptySpecification;
+    //删除规格
+    vm._removeSpecification = _removeSpecification;
+    //选中当前商品规格
+    vm._selectCurrentSpecifications = _selectCurrentSpecifications;
+    //绘制规格矩阵
+    vm._renderMatrix = _renderMatrix;
+    //新增产品参数
+    vm._addEmptyParameters = _addEmptyParameters;
+    //移除产品参数
+    vm._removeParameters = _removeParameters;
+    //保存事件
+    vm._createForm = _createForm;
+
+    vm._init();
+
+    function _init() {
+      publishNoDeliveryService
+        ._commonGet(BONEDAREA, null, null)
+        .then(function (bonedAreaSelect) {
+          vm.product.bonedArea = bonedAreaSelect;
+        }, function () {
+          notificationService.notify('异常', '一级采购分类查询出错');
+        })
+    }
+
+    function _getFirstCategory() {
+      return publishNoDeliveryService
+        ._commonGet(FIRST_CATEGORY, null, null)
+        .then(function (data) {
+          return data = arrayUtil.formatToMulitSelect(data);
+        }, function () {
+          notificationService.notify('异常', '一级采购分类查询出错');
+        })
+    }
+
+    function _getSecondCategory(selected) {
+      var pcCode = selected.firstCategory;
+      return publishNoDeliveryService
+        ._commonGet(OTHER_CATEGORY, {pcCode: pcCode}, null)
+        .then(function (data) {
+          return data = arrayUtil.formatToMulitSelect(data);
+        }, function () {
+          notificationService.notify('异常', '二级采购分类查询出错');
+        })
+    }
+
+    function _getThirdCategory(selected) {
+      var pcCode = selected.secondCategory;
+      return publishNoDeliveryService
+        ._commonGet(OTHER_CATEGORY, {pcCode: pcCode}, null)
+        .then(function (data) {
+          return data = arrayUtil.formatToMulitSelect(data);
+        }, function () {
+          notificationService.notify('异常', '二级采购分类查询出错');
+        })
+    }
+
+    function _renderMatrix(specifications, specificationsObjects, outerIndex, innerIndex, item, isChecked) {
+      var specificationsObjectsCompacted = [],
+        index = 0,
+        productSpecifications = vm.product.productSpecifications;
+      if (isChecked) {
+        specificationsObjects[outerIndex][innerIndex] = item;
+      } else {
+        specificationsObjects[outerIndex][innerIndex] = false;
+      }
+      console.log(specificationsObjects);
+      //过滤包含undefined, false, null数组
+      _.each(specificationsObjects, function (o, i) {
+        var arr = _.compact(o);
+        if (arr.length) {
+          specificationsObjectsCompacted[index] = arr;
+          specifications[i].isSelected = true;
+          index++;
+        } else {
+          specifications[i].isSelected = false;
+        }
+      })
+      //绘制矩阵
+      specificationsObjectsCompacted = publishNoDeliveryService._combine(specificationsObjectsCompacted);
+      //绘制数据模型
+      productSpecifications.splice(0, productSpecifications.length);
+      _.each(specificationsObjectsCompacted, function (o, i) {
+        productSpecifications[i] = {
+          specifications: o,
+          isCurrent: 0
+        }
+        if (i === 0) {
+          productSpecifications[i].isCurrent = 1;
+        }
+      })
+    }
+
+    function _loadProductInfo(purchaseClass) {
+      if (!purchaseClass) {
+        vm.isLoadInfo = false;
+        return;
+      }
+      var productInfoParam = {pcCode: purchaseClass},
+        brandsParam = {saCode: sessionService.getSessionFromCache().saCode};
+
+      $q.all([
+        publishNoDeliveryService._commonGet(PRODUCT_INFO, null, productInfoParam),
+        publishNoDeliveryService._commonGet(BRANDS, brandsParam, null)
+      ]).then(function (data) {
+        var product = data[0].classes;
+        vm.product.properties = product.attributes,
+          vm.product.parameters = product.parameters,
+          vm.product.specifications = product.specifications,
+          vm.product.info.brandsSelect = data[1];
+
+        // publishNoDeliveryService._loadProductConfigure(vm, product);
+
+        vm.isLoadInfo = true;
+      }, function (errMsg) {
+        errMsg[0] ? notificationService.notify('异常', errMsg[0]) : '';
+        errMsg[1] ? notificationService.notify('异常', errMsg[1]) : '';
+      })
+    }
+
+    function _selectCurrentSpecifications(productSpecifications, index) {
+      _.each(productSpecifications, function (o, i) {
+        o.isCurrent = (index === i ? 1 : 0);
+      })
+    }
+
+    function _removeSpecifications(specifications, index) {
+      specifications.splice(index, 1);
+    }
+
+    function _addEmptySpecification(item) {
+      if (!item.values) {
+        item.values = [];
+      }
+      item.values.push({
+        pvId: '',
+        isGlobal: 0,
+        index: item.values.length - 1
+      })
+    }
+
+    function _removeSpecification(items, index) {
+      items.splice(index, 1);
+    }
+
+    function _addEmptyParameters(parameters) {
+      if (parameters.length >= 20) {
+        notificationService.notify('异常', '自定义参数已达上限');
+        return;
+      }
+      parameters.push({
+        ppId: '',
+        pvId: '',
+        isGlobal: 0
+      })
+    }
+
+    function _removeParameters(parameters, index) {
+      parameters.splice(index, 1);
+    }
+
+    function _createForm(form) {
+      var submitData = angular.copy(vm.product),
+        isValid = true,
+        rules = [filterInfo, filterPics, filterProperties, filterParameters, submit];
+
+      _.each(rules, function (ruleFunc, i) {
+        if (isValid) {
+          ruleFunc();
+        }
+      })
+
+      function filterInfo() {
+        if (!submitData.info.name) {
+          notificationService.notify('异常', '请填写商品名称');
+          return isValid = false;
+        }
+      }
+
+      function filterProductSpecifications() {
+        $.each(function (i, o) {
+
+        })
+      }
+
+      function filterPics() {
+        if (submitData.pics.length === 0) {
+          notificationService.notify('异常', '请上传至少一张商品图片');
+          return isValid = false;
+        }
+      }
+
+      function filterProperties() {
+        var propertiesTemp = [];
+        $.each(submitData.properties, function (i, o) {
+          //如果是非必填
+          o.pvIds = _.compact(o.pvIds);
+          if (!+o.required) {
+            if (o.pvIds.length > 0) {
+              propertiesTemp.push(o);
+            }
+          } else {
+            if (o.pvIds.length === 0) {
+              notificationService.notify('异常', '请填写商品属性的必填项');
+              return isValid = false;
+            }
+            propertiesTemp.push(o);
+          }
+        })
+        submitData.properties = propertiesTemp;
+      }
+
+      function filterParameters() {
+        var parametersTemp = [];
+        $.each(submitData.parameters, function (i, o) {
+          //如果是非必填字段 仅记录有值得字段
+          if (!+o.required) {
+            (!!o.ppId && !!o.pvId) ? parametersTemp.push(o) : '';
+          } else {
+            if (!o.pvId) {
+              notificationService.notify('异常', '请填写商品参数的必填项');
+              return isValid = false;
+            }
+            parametersTemp.push(o);
+          }
+        })
+        submitData.parameters = parametersTemp;
+      }
+
+      function submit() {
+        console.log(submitData);
+        publishNoDeliveryService._commonPost(CREATE_PRODUCT, null, submitData).then(
+          function (product) {
+            notificationService.success('成功', '创建成功');
+            var psCode = product.psCode;
+            $state.go('xcore.product_detail', {
+              psCode: psCode,
+              tabIndex: 1,
+              isDelivery: false
+            });
+          },
+          function (errMsg) {
+            errMsg ? notificationService.notify('异常', errMsg) : '';
+          })
+      }
+    }
+  }
+
+})();

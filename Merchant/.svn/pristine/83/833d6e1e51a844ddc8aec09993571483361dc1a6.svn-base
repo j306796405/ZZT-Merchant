@@ -1,0 +1,146 @@
+/**!
+ * publish.service.js
+ * @author jianglj
+ * @create 2016-04-19 09:49
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .factory('product.publish.publishService', publishService);
+    publishService.$inject = [
+        '$log',
+        '$http',
+        '$q',
+        'comp.rest.restAccessor'
+    ];
+    function publishService($log, $http, $q, restAccessor) {
+
+        return {
+            getProductInfo: getProductInfo,
+            getSingleProduct: getSingleProduct,
+            createDelivery: createDelivery,
+            getDeliveryDetail: getDeliveryDetail,
+            updateDeliveryDetail: updateDeliveryDetail,
+            filterSelectedCheckboxs: filterSelectedCheckboxs,
+            validateCode: validateCode,
+            getPurchase: getPurchase,
+            getPurchaseDetail: getPurchaseDetail,
+            updateMultiple: updateMultiple,
+            updateUnified: updateUnified,
+        };
+
+        function getProductInfo(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getSingleProduct(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function createDelivery(uri, pathVariable, data) {
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getDeliveryDetail(uri, pathVariable, filterParam) {
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateDeliveryDetail(uri, pathVariable, data) {
+            return restAccessor.patch(uri, null, data).then(
+                function (response) {
+                    return response.data;
+                },
+                function (errResponse) {
+                    return $q.reject(errResponse.data.message);
+                }
+            );
+        }
+
+        function filterSelectedCheckboxs(array) {
+            var pvObjectsTemp = [];
+            _.each(array, function (item, index) {
+                if (!!item && !!item.pvId) {
+                    pvObjectsTemp.push(item);
+                }
+            })
+            return pvObjectsTemp;
+        }
+
+        function validateCode(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+        
+        function getPurchase(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function getPurchaseDetail(uri, pathVariable, filterParam){
+            return restAccessor.get(uri, pathVariable, filterParam)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateMultiple(uri, pathVariable, data){
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+
+        function updateUnified(uri, pathVariable, data){
+            return restAccessor.post(uri, pathVariable, data)
+                .then(function (response) {
+                        return response.data;
+                    },
+                    function (errResponse) {
+                        return $q.reject(errResponse.data.message);
+                    });
+        }
+    }
+
+})();

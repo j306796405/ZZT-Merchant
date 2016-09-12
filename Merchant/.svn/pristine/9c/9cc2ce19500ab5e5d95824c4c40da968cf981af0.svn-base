@@ -1,0 +1,36 @@
+/**!
+ * delivery.urls.service
+ * @author jianglj
+ * @create 2016-05-11 15:30
+ */
+(function () {
+
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .constant('delivery.urls', {
+            create: {
+                product: '/merchant/purchase-products/detail/:pprId',
+                detail: '/merchant/purchase-products/class',
+                create: '/product/inwarehousing/create',
+                purchase: '/product/inWarehouse/stock-price/get-purchase/:psCode',
+                channels: '/product/sale-channels'
+            },
+            detail: {
+                detail: '/product/inWarehouse/edit/get/:psCode',
+                validateProduct: '/product/inWarehouse/edit/validate/product-group',
+                purchase: '/product/inWarehouse/stock-price/get/:psCode'
+            },
+            update: {
+                update: '/product/inWarehouse/edit/update',
+            },
+            copy: {
+                create: '/product/inWarehouse/copy/create'
+            }
+        })
+        .constant('notDelivery.urls', {
+
+        });
+
+})();

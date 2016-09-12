@@ -1,0 +1,70 @@
+/**!
+ * uploader.controller
+ * @author jianglj
+ * @create 2016-05-10 11:30
+ */
+(function () {
+  'use strict';
+
+  angular
+    .module('xcore.comp')
+    .directive('wangEditor', wangEditorFunc);
+
+  function wangEditorFunc(settings, sessionService, publicSetting) {
+    return {
+      restrict: 'A' ,
+      require: 'ngModel',
+      scope: {
+        ngModel: '='
+      },
+      link: function(scope, element, attrs, ctrl){
+        // 创建编辑器
+        var editor = new wangEditor('editor-trigger');
+
+        // 上传图片
+        editor.config.uploadImgUrl = settings.backend.upload + publicSetting.editorImageUpload;
+
+        // 关闭菜单栏fixed
+        editor.config.menuFixed = false;
+
+        // 配置自定义参数
+        editor.config.uploadParams = {};
+
+        // 设置 headers
+        editor.config.uploadHeaders = {
+          'X-Auth-Token': sessionService.getToken()
+        };
+
+
+        editor.onchange = function () {
+          // 从 onchange 函数中更新数据
+          scope.$apply(function () {
+            _setViewValue();
+          });
+        };
+
+        editor.create();
+
+        _setViewValue(scope.ngModel);
+
+        function _setViewValue(value){
+          var txt;
+          if(value){
+            txt = editor.$txt.html(value);
+          }else{
+            txt = editor.$txt.html();
+          }
+          ctrl.$setViewValue(txt);
+        }
+      }
+    };
+  }
+
+  wangEditorFunc.$inject = [
+    'settings',
+    'comp.session.sessionService',
+    'xcore.public.setting'
+  ]
+
+
+})();

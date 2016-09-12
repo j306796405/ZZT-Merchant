@@ -1,0 +1,283 @@
+/**!
+ * main.controller.js
+ * @author jianglj
+ * @create 2016-04-18 11:11
+ */
+(function () {
+  'use strict';
+
+  angular
+    .module('xcore.biz.product')
+    .controller('product.list.MainController', mainController);
+
+  mainController.$inject = [
+    '$controller',
+    '$q',
+    '$state',
+    '$scope',
+    'product.list.service',
+    'comp.notification.notificationService',
+    'ngDialog',
+    'comp.session.sessionService',
+    'product.publish.publishService'
+  ];
+  function mainController($controller, $q, $state, $scope, listService, notificationService, ngDialog, sessionService, publishService) {
+    var DELIVERY_EDIT = '/product/inWarehouse/edit/get/:psCode';
+    $scope._init = _init;
+
+    //$scope.queryProudct = queryProductFuc;
+    $controller('comp.ext.controller.PaginationDataGridController', {$scope: $scope});
+    /** 实现 PaginationDataGridController 的抽象方法 */
+    $scope.getCollection = queryProductFuc;
+
+    $scope.upApply = upApplyFunc;
+    $scope.downApply = downApplyFunc;
+    $scope.cancelApply = cancelApplyFunc;
+    $scope.toDetail = toDetailFunc;
+    $scope.copyProduct = copyProduct;
+    $scope.reset = resetFunc;
+
+    $scope.changeStates = changeStatesFunc;
+
+    /**审核数据模型 */
+    $scope.apply = {
+      psCode: '',
+      version: '',
+      type: '',
+      meno: ''
+    };
+    $scope.categorys = [{code: '#', name: '请选择'}];
+    $scope.filter.selectCategory = {code: '#', name: '请选择'};
+
+    $scope.brands = [{code: '#', name: '请选择'}];
+    $scope.filter.selectBrand = {code: '#', name: '请选择'};
+
+    $scope.panes = [{
+      title: '全部',
+      total: '0',
+      value: ''
+    }, {
+      title: '已上架',
+      total: '0',
+      value: '1'
+    }, {
+      title: '已下架',
+      total: '0',
+      value: '0'
+    }, {
+      title: '上架待审核',
+      total: '0',
+      value: '9'
+    }, {
+      title: '下架待审核',
+      total: '0',
+      value: '10'
+    }];
+    _init();
+    function _init() {
+      $q.all(getCategory, getBrands, queryProductFuc);
+      getCategory();
+      getBrands();
+    }
+
+    /**
+     * 获取分页列表
+     * @param value
+     * @returns {*}
+     */
+    function queryProductFuc(value) {
+      if (typeof(value.selectBrand ) != "undefined" && typeof(value.selectBrand.code ) != "undefined") {
+        value.brandCode = value.selectBrand.code == '#' ? null : value.selectBrand.code;
+        delete value.selectBrand;
+      }
+      if (typeof(value.selectCategory ) != "undefined" && typeof(value.selectCategory.code ) != "undefined") {
+        value.pcCode = value.selectCategory.code == '#' ? null : value.selectCategory.code;
+        delete value.selectCategory;
+      }
+      var state = $scope.filter.state;
+      if (state == '0') {
+        state = '2';
+      } else if (state == '1') {
+        state = '1';
+      }
+      else if (state == '9') {
+        state = '3';
+      } else if (state == '10') {
+        state = '4';
+      } else {
+        state = '0';
+      }
+      if (state == "") {
+        $(".panel-heading").find("ul").find("li").eq(0).addClass("active");
+      } else {
+        $(".panel-heading").find("ul").find("li").removeClass("active");
+        $(".panel-heading").find("ul").find("li").eq(state).addClass("active");
+      }
+
+      console.log("value==" + value);
+      return listService.getProductList(value).then(
+        function (response) {
+          $scope.data = response.data;
+          return {
+            total_count: response.headers['x-total-count'],
+            collection: response.data
+          };
+        },
+        function (errMsg) {
+          return $q.reject(errMsg);
+        }
+      );
+    }
+
+    /*
+     上下架申请
+     */
+    function upApplyFunc(psCode, version, type) {
+      $scope.apply.psCode = psCode;
+      $scope.apply.version = version;
+      $scope.apply.type = type;
+      ngDialog.openConfirm({
+        template: 'upApplyDialogId',
+        className: 'ngdialog-theme-default',
+      }).then(function () {
+        upAndDownDataFunc($scope.apply);
+      }, function () {
+      });
+    }
+
+    function downApplyFunc(psCode, version, type) {
+
+      $scope.apply.psCode = psCode;
+      $scope.apply.version = version;
+      $scope.apply.type = type;
+      ngDialog.openConfirm({
+        template: 'downApplyDialogId',
+        className: 'ngdialog-theme-default',
+      }).then(function (memo) {
+        if (memo) {
+          $scope.apply.memo = memo;
+        }
+        upAndDownDataFunc($scope.apply);
+      }, function () {
+      });
+    }
+
+    function upAndDownDataFunc(apply) {
+      listService.upAndDownProductApply(apply).then(
+        function (data) {
+          $scope.listData();
+        },
+        function (errMsg) {
+          notificationService.notify('异常', errMsg);
+        }
+      );
+    }
+
+    /*
+     取消上下架审核
+     */
+    function cancelApplyFunc(paId) {
+      ngDialog.openConfirm({
+          template: 'cancelApplyDialogId',
+          className: 'ngdialog-theme-default'
+        })
+        .then(function () {
+          cancelApplyDataFunc(paId);
+        }, function () {
+        });
+    }
+
+    function cancelApplyDataFunc(paId) {
+      listService.cancelApply(paId).then(
+        function (data) {
+          $scope.listData();
+        },
+        function (errMsg) {
+          notificationService.notify('异常', errMsg);
+        }
+      );
+    }
+
+    function getCategory() {
+      var saCode = sessionService.getSessionFromCache().saCode;
+      listService.getCategory(saCode).then(
+        function (data) {
+          for (var i = 0; i < data.length; i++) {
+            _recursiveRetrieveTree(data[i], $scope.categorys, '');
+          }
+        },
+        function (errMsg) {
+          return $q.reject(errMsg);
+        }
+      );
+    }
+
+    function getBrands() {
+      var saCode = sessionService.getSessionFromCache().saCode;
+      listService.getBrands(saCode).then(
+        function (data) {
+          for (var i = 0; i < data.length; i++) {
+            _recursiveRetrieveTree(data[i], $scope.brands, '');
+          }
+        },
+        function (errMsg) {
+          return $q.reject(errMsg);
+        }
+      );
+    }
+
+    function changeStatesFunc(value) {
+      if (typeof(value) != "undefined") {
+        $scope.filter.state = value;
+        $scope.listData();
+      }
+    }
+
+    function resetFunc() {
+      $scope.filter.name = '';
+      $scope.filter.psCode = '';
+      $scope.filter.selectCategory = {code: '#', name: '请选择'};
+      $scope.filter.selectBrand = {code: '#', name: '请选择'};
+      $scope.filter.state = '';
+      $scope.filter.isWarehose = '';
+    }
+
+    function _recursiveRetrieveTree(node, selections, indent) {
+      selections.push({
+        name: indent + node.name,
+        code: node.code
+      });
+
+      if (node.children && node.children.length > 0) {
+        for (var i = 0; i < node.children.length; i++) {
+          _recursiveRetrieveTree(node.children[i], selections, indent + '---');
+        }
+      }
+    }
+
+    function toDetailFunc(isWarehose, psCode) {
+      publishService
+        .getDeliveryDetail(DELIVERY_EDIT, {psCode: '201605060000056'}, null)
+        .then(function (product) {
+          $state.go('xcore.product_publish.delivery_edit', {
+            data: product
+          });
+        }, function (errMsg) {
+          notificationService.notify('异常', errMsg);
+        });
+    }
+
+    function copyProduct() {
+      publishService
+        .getDeliveryDetail(DELIVERY_EDIT, {psCode: '201605060000056'}, null)
+        .then(function (product) {
+          $state.go('xcore.product_publish.delivery_copy', {
+            data: product
+          });
+        }, function (errMsg) {
+          notificationService.notify('异常', errMsg);
+        });
+    }
+  }
+
+})();

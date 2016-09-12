@@ -1,0 +1,128 @@
+/**!
+ * product.publish.detail.js
+ * @author jianglj
+ * @create 2016-04-18 11:11
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.detail', DetailController)
+
+    DetailController.$inject = [
+        '$state',
+        '$stateParams',
+        '$scope',
+        'delivery.urls',
+        'notDelivery.urls',
+        'product.publish.publishService',
+        'comp.notification.notificationService'
+    ];
+    function DetailController($state, $stateParams, $scope, deliveryUrls, notDeliveryUrls, publishService, notificationService) {
+        var vm = this,
+            detailDeliveryUrls = deliveryUrls.detail,
+            detailNotDeliveryUrls = notDeliveryUrls.detail,
+        //产品详情
+            PRODUCT_DETAIL,
+        //查询销售商品的关联采购商品详情信息
+            PURCHASE_DETAIL;
+
+        $scope.product = {
+            psCode: '',
+            _setPsCode: function (psCode) {
+                this.psCode = psCode;
+            },
+            delivery: {},
+            purchase: {},
+            status: {
+                isDelivery: true
+            },
+            _changeProductStatus: _changeProductStatus
+        }
+
+        $scope.tabs = {
+            //默认选中第一个tab
+            index: 1,
+            //tab切换 params: tabIndex, ...
+            _changeTab: _changeTab,
+            //点击商品信息tab params psCode
+            _goInfo: _goInfo,
+            //点击商品价格/库存/渠道tab
+            _goPurchase: _goPurchase
+        }
+
+        //初始化
+        vm._init = _init;
+
+        vm._init();
+
+        function _init() {
+            debugger;
+            var psCode = $stateParams.psCode,
+                tabIndex = $stateParams.tabIndex,
+                isDelivery = $stateParams.isDelivery;
+            $scope.product._changeProductStatus(true, isDelivery);
+            $scope.product._setPsCode(psCode);
+            $scope.tabs._changeTab(tabIndex, psCode);
+        }
+
+        function _changeTab() {
+            var index = Array.prototype.splice.apply(arguments, [0, 1])[0] || 0;
+            var tabsFunc = [$scope.tabs._goInfo, $scope.tabs._goPurchase];
+            var args = Array.prototype.join.call(arguments, ',');
+            tabsFunc[index](args);
+        }
+
+        function _goInfo(psCode) {
+            var INFO_EVENT = 'getInfoData';
+            publishService
+                .getDeliveryDetail(PRODUCT_DETAIL, {psCode: psCode}, null)
+                .then(function (info) {
+                    debugger;
+                    if($scope.product.status.isDelivery){
+                        $state.go('xcore.product_detail.delivery').then(function () {
+                            $scope.$broadcast(INFO_EVENT, info);
+                        });
+                    }else{
+                        $state.go('xcore.product_detail.notDelivery').then(function () {
+                            $scope.$broadcast(INFO_EVENT, info);
+                        });
+                    }
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                });
+            $scope.tabs.index = 1;
+        }
+
+        function _goPurchase() {
+            var promise,
+                PURCHASE_EVENT = 'getPurchaseData',
+                success = function (purchase) {
+                    $state.go('xcore.product_detail.delivery').then(function () {
+                        $scope.$broadcast(PURCHASE_EVENT, purchase);
+                    });
+                },
+                failure = function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                };
+            promise = publishService.getPurchase(PURCHASE_DETAIL, {psCode: $scope.product.psCode}, null);
+            promise.then(success, failure);
+            $scope.tabs.index = 2;
+        }
+
+        function _changeProductStatus(isCreate, isDelivery) {
+            this.status.isCreate = isCreate;
+            this.status.isDelivery = isDelivery;
+            if (isDelivery) {
+                PRODUCT_DETAIL = detailDeliveryUrls.detail;
+                PURCHASE_DETAIL = detailDeliveryUrls.purchase;
+            } else {
+                PRODUCT_DETAIL = detailNotDeliveryUrls.detail;
+                PURCHASE_DETAIL = detailNotDeliveryUrls.purchase;
+            }
+        }
+
+    }
+
+})();

@@ -1,0 +1,176 @@
+<div class="enter-wrapper">
+    <h1 class="review-title">商品规格<span class="f12 ml20"><em class="encoded">规格组编码：<font
+            class="red">12167161216716</font></em><em class="encoded-edit">规格组编码：<input type="text"><button
+            type="button" class="btn btn-success btn-sm mr5">确定</button><button type="button"
+                                                                                class="btn btn-warning btn-sm">取消</button></em><a
+            class="encoded-btn" href="javascript:void(0)">编辑</a><a id="look1" class="look" href="javascript:void(0)">查看相同规格组编码商品</a><a
+            class="look" id="look2" href="javascript:void(0)">什么是规格组编码？</a></span></h1>
+    <div>
+        <label class="mr20"><input type="checkbox" class="table-check check-element">颜色</label><label
+            class="mr20"><input type="checkbox" class="table-check check-element">尺寸</label><label class="mr20"><input
+            type="checkbox" class="table-check check-element">段位</label><label class="mr20"><input type="checkbox"
+                                                                                                   class="table-check check-element">规格</label>
+    </div>
+    <span class="format-title">颜色</span>
+    <div class="format clearfix">
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                 红色
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                               <input type="radio" name="size" class="table-check">
+                                               红色
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                               <input type="radio" name="size" class="table-check">
+                                               红色
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                 红色
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                               <input type="radio" name="size" class="table-check">
+                                               红色
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                               <input type="radio" name="size" class="table-check">
+                                               红色
+                                            </label>
+                                        </span>
+                                        <span class="hide" id="format-add">
+                                            <input type="radio" name="size" class="table-check">
+                                            <input type="text" class="size-fillin">
+                                            <a href="javascript:void(0)" class="x">X</a>
+                                        </span>
+                                        <span>
+                                            <input type="radio" name="size" class="table-check">
+                                            <input type="text" class="size-fillin">
+                                            <a href="javascript:void(0)" class="x">X</a>
+                                        </span>
+        <em class="add">
+            <input type="text" class="add-input" name="format">
+            <a class="btn btn-success btn-sm" href="javascript:;">+添加</a>
+        </em>
+    </div>
+    <span class="format-title">尺寸</span>
+
+    <div class="format clearfix">
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                S
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                L
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                XL
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                XXL
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <input type="radio" name="size" class="table-check">
+                                            <input type="text" class="size-fillin">
+                                            <a href="javascript:void(0)" class="x">X</a>
+                                        </span>
+        <em class="add">
+            <input type="text" class="add-input" name="size">
+            <a class="btn btn-success btn-sm" href="javascript:;">+添加</a>
+        </em>
+    </div>
+    <span class="format-title">性别</span>
+    <div class="format clearfix">
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                男
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                            女士
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                儿童男
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <label>
+                                                <input type="radio" name="size" class="table-check">
+                                                儿童女
+                                            </label>
+                                        </span>
+                                        <span>
+                                            <input type="radio" name="size" class="table-check">
+                                            <input type="text" class="size-fillin">
+                                            <a href="javascript:void(0)" class="x">X</a>
+                                        </span>
+        <em class="add">
+            <input type="text" class="add-input" name="size">
+            <a class="btn btn-success btn-sm" href="javascript:;">+添加</a>
+        </em>
+    </div>
+    <span class="format-title">已选商品规格</span>
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>颜色</th>
+            <th>尺寸</th>
+            <th>性别</th>
+            <th>当前商品规格</th>
+            <th>厂商指导价（元）</th>
+            <th>默认销售价（元）</th>
+            <th>默认库存</th>
+            <th>市场价（元）</th>
+            <th>货号</th>
+            <th>条形码</th>
+            <th>限购数量</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>红色</td>
+            <td>S</td>
+            <td>男</td>
+            <td><input type="radio" class="table-check"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><input type="text"></td>
+            <td><a class="btn btn-success btn-sm" href="javascript:;">修改</a></td>
+        </tr>
+        </tbody>
+    </table>
+    <p class="hint">厂商指导价 / 默认销售价 / 默认库存 为必填项</p>
+</div>

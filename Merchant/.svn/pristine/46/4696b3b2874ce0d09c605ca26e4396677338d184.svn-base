@@ -1,0 +1,98 @@
+/**!
+ * publish.route.js
+ * @author jianglj
+ * @create 2016-04-15 13:22
+ */
+(function() {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .config(routerConfig);
+
+    routerConfig.$inject = [
+        '$stateProvider'
+    ];
+    function routerConfig($stateProvider) {
+
+        var basePath = 'app/business/product/publish/';
+        var baseState = 'xcore.product_publish.';
+        var basePackage = 'product.publish.';
+
+        $stateProvider
+            //入仓创建
+            .state(baseState + 'delivery', {
+                views: {
+                    "": {
+                        templateUrl: basePath + 'view/delivery.html',
+                        controller: basePackage + 'DeliveryController',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: basePath + 'view/purchase-create.html',
+                        controller: basePackage + 'DeliveryPurchaseController',
+                        controllerAs: 'vm'
+                    }
+                },
+                params:{
+                     data:{}
+                }
+            })
+            //入仓编辑
+            .state(baseState + 'delivery_edit', {
+                views: {
+                    "": {
+                        templateUrl: basePath + 'view/delivery-edit.html',
+                        controller: basePackage + 'DeliveryEditController',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: basePath + 'view/purchase-detail.html',
+                        controller: basePackage + 'DeliveryPurchaseDetailController',
+                        controllerAs: 'vm'
+                    }
+                },
+                params:{
+                    data:{}
+                }
+            })
+            //入仓复制
+            .state(baseState + 'delivery_copy', {
+                views: {
+                    "": {
+                        templateUrl: basePath + 'view/delivery-copy.html',
+                        controller: basePackage + 'DeliveryCopyController',
+                        controllerAs: 'vm'
+                    },
+                    "purchase": {
+                        templateUrl: basePath + 'view/purchase-copy.html',
+                        controller: basePackage + 'DeliveryPurchaseCopyController',
+                        controllerAs: 'vm'
+                    }
+                },
+                params:{
+                    data:{}
+                }
+            }).state(baseState + 'not_delivery', {
+            // templateUrl: basePath + 'view/delivery.html',
+            // controller: basePackage + 'DeliveryController',
+            views: {
+                "": {
+                    templateUrl: basePath + 'view/not-delivery.html',
+                    controller: basePackage + 'NotDeliveryController',
+                    controllerAs: 'vm'
+                },
+                "purchase": {
+                    templateUrl: basePath + 'view/purchase-create.html',
+                    controller: basePackage + 'DeliveryPurchaseController',
+                    controllerAs: 'vm'
+                }
+            },
+            params:{
+                data:{}
+            }
+        })
+    }
+
+})();
+

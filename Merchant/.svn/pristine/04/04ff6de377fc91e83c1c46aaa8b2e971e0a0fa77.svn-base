@@ -1,0 +1,1 @@
+<div ui-view="" data-ng-controller="order.list.MainController"></div>

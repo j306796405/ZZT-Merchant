@@ -1,0 +1,10 @@
+(function() {
+  'use strict';
+
+  angular.module('xcore.biz.order', [
+    'ui.router',
+    'xcore.comp',
+    'ngDialog'
+  ]);
+
+})();

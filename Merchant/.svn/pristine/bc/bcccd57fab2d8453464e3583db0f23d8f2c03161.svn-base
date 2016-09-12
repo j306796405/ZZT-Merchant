@@ -1,0 +1,276 @@
+<!--关联采购商品-->
+<div>详情</div>
+<div class="enter-wrapper"  data-ng-init="purchaseProducts = product.delivery.purchaseProducts">
+    <h1 class="review-title">关联采购商品</h1>
+    <div class="related-pro">
+        <ul>
+            <li ng-repeat="item in purchaseProducts" class="mb30 J_purchaseProduct" data-ng-init="item.pprIds = [];">
+                <select class="select-tab mr5" data-ng-model="vm.filterBy[$index]" data-ng-init="vm.filterBy[$index] = vm.filterBySelect[0].id"
+                        ng-options="x.id as x.name for x in vm.filterBySelect"></select>
+                <span data-ng-if="vm.filterBy[$index] == 'name'" class="autocomplete_box">
+                    <div id="{{$index}}" focus-in="_focusIn()" angucomplete-alt placeholder="按商品名称查询" maxlength="50"
+                         pause="100"
+                         selected-object="vm._selectAutoComplete"
+                         remote-url="{{vm.MERCHANT}}/merchant/purchase-products/list"
+                         remote-url-request-formatter="vm._remoteUrlRequestByName"
+                         search-fields="name" title-field="name,outSku,whCode" description-field="pprId" minlength="1"
+                         input-class="related-input inline-block mr5" match-class="highlight"/>
+                </span>
+                <span data-ng-if="vm.filterBy[$index] == 'SKU'" class="autocomplete_box">
+                    <div id="{{$index}}" angucomplete-alt placeholder="按采购SKU号查询" maxlength="50" pause="100"
+                         selected-object="vm._selectAutoComplete"
+                         remote-url="{{vm.MERCHANT}}/merchant/purchase-products/list"
+                         remote-url-request-formatter="vm._remoteUrlRequestBySKU"
+                         search-fields="name" title-field="name,outSku,whCode" description-field="pprId" minlength="1"
+                         input-class="related-input inline-block mr5" match-class="highlight"/>
+                </span>
+
+                <button type="button" class="btn btn-primary btn-sm J_relate-product"
+                        data-ng-click="vm._selectProduct($event, item, purchaseProducts, $index)">关联
+                </button>
+                <span class="hint">（请从查询列表中选中需要关联的采购商品，再点击关联按钮进行关联）</span>
+                <p class="reduce">
+                    <label class="select-label">
+                        <em class="star">*</em>库存扣减数量：<input type="text" data-ng-model="item.nums" disabled>
+                    </label>
+                </p>
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th class="channel-name">采购商品名称</th>
+                        <th>采购商品ID</th>
+                        <th>仓库</th>
+                        <th>采购价</th>
+                        <th>剩余库存</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr
+                            data-ng-repeat="product in item.batchProducts"
+                            data-ng-init="item.pprIds[$index] = product.pprId">
+                        <td class="channel-name red">{{product.name}}</td>
+                        <td>{{product.pprId}}</td>
+                        <td>{{product.warehouse}}</td>
+                        <td>{{product.buyPrice}}</td>
+                        <td>{{product.inventory}}</td>
+                        <td><a href="javascript:;" class="btn btn-warning btn-sm J_unlink_btn"
+                               data-ng-if="!product.isDisabled"
+                               data-ng-click="vm._unlinkProduct($event, $index, item)">取消关联{{product.disabled}}</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <label class="check-label">
+                    <input type="radio" class="table-check check-element mr5" name="isMain"
+                           data-ng-model="item.isMain" ng-value="1" disabled>
+                    选择此采购商品的分类作为销售分类
+                </label>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!--商品基本信息-->
+<div class="enter-wrapper" data-ng-init="info = product.delivery.info">
+    <h1 class="review-title">商品基本信息</h1>
+    <div class="pro-msg">
+        <p class="mt20">
+            <label>
+                商品分类：
+                {{info.pcFirstName}} > {{info.pcSecondName}} > {{info.pcThirdName}}
+            </label>
+        </p>
+        <p class="mt20">
+            <label>
+                品牌名称：
+                {{info.brandName}}
+            </label>
+        </p>
+        <p class="mt20">
+            <label>商品名称：
+                <input type="text" data-ng-model="info.name">
+            </label>
+        </p>
+
+        <p class="mt20">
+            <label class="desc-label long">
+                商品卖点：
+                <textarea data-ng-model="info.summary"></textarea>
+            </label>
+        </p>
+
+        <p>
+            <label>商品编号：
+                <span>{{info.psCode}}</span>
+            </label>
+        </p>
+    </div>
+</div>
+
+<!--商品规格-->
+<div class="enter-wrapper" data-ng-init="specifications = product.delivery.specifications; grpProducts = product.delivery.grpProducts; info = product.delivery.info;">
+    <h1 class="review-title">商品规格
+        <span class="f12 ml20">
+            <em class="encoded" data-ng-init="isEditCode = false" data-ng-show="!isEditCode">规格组编码：<font class="red">{{info.pgCode}}</font></em>
+            <em class="encoded-edit" data-ng-show="isEditCode">规格组编码：
+                <input type="text" data-ng-model="info.pgCode"/>
+                <button class="btn btn-success btn-sm mr5" type="button" data-ng-click="vm._validateCode(info.psCode, info.pgCode);">确定</button>
+                <button class="btn btn-warning btn-sm" type="button" data-ng-click="isEditCode = !isEditCode">取消</button>
+            </em>
+            <a href="javascript:void(0)" class="encoded-btn" data-ng-click="isEditCode = !isEditCode" data-ng-show="!isEditCode">编辑</a>
+            <a href="javascript:void(0)" class="look" id="btn-similarProducts" ng-click="similarProducts={open: true}">查看相同规格组编码商品</a>
+            <a href="javascript:void(0)" class="look" id="btn-codeInfo" ng-click="codeInfo={open: true}">什么是规格组编码？</a>
+        </span>
+    </h1>
+    <table class="table table-hover format-table">
+        <thead>
+            <tr>
+                <th data-ng-repeat="specification in specifications">{{specification.ppName}}</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td data-ng-repeat="specification in specifications">{{specification.pvName}}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!--商品图片-->
+<div uploader-comp pics = "product.delivery.pics"></div>
+
+<!--商品属性-->
+<div class="enter-wrapper" data-ng-init="attributes = product.delivery.attributes;">
+    <h1 class="review-title">商品属性</h1>
+    <div class="pro-property-wrap">
+        <ul class="pro-property-box clearfix" ng-repeat="group in attributes">
+            <li ng-show="($parent.$index % 3 == 0) && ($parent.$index + 3 > $index) && ($parent.$index <= $index)" ng-repeat="attribute in attributes">
+                <!-- 0:单选 1:输入  2:多选 -->
+                <!--单选-->
+                <span data-ng-if="attribute.multiSelect == 0"
+                      data-ng-init="attribute.isText = 0;">
+                    <label class="key" data-required="{{attribute.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <select class="form-ele"
+                            ng-options = "option.name for option in attribute.valuesTemp"
+                            ng-model = "attribute.values[0]"
+                            ng-init = "attribute.values[0] = (attribute.valuesTemp | selected);">
+                        <option value="">请选择</option>
+                    </select>
+                </span>
+                <!--文本输入框-->
+                <span
+                        data-ng-if="attribute.multiSelect == 1"
+                        data-ng-init="attribute.isText = 1">
+                    <label class="key" data-required="{{attribute.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <input type="text" class="form-ele input"
+                           ng-trim="true"
+                           data-ng-model="attribute.values[0].name">
+                </span>
+                <!--多选框-->
+                <span data-ng-if="attribute.multiSelect == 2"
+                      data-ng-init="attribute.isText = 0; attribute.isCheckbox = 1;">
+                    <label class="key" data-required="{{item.required}}">
+                        <em class="star" data-ng-if="+attribute.required">*</em>{{attribute.name}}：
+                    </label>
+                    <span class="checkgroup">
+                        <label data-ng-repeat="label in attribute.values">
+                            <input type="checkbox" class="table-check" name="{{'gourp-' + attribute.ppId}}"
+                                   data-ng-checked="{{label.select}}"
+                                   data-ng-true-value="1"
+                                   data-ng-false-value="0"
+                                   data-ng-model="attribute.values[$index].select">
+                            {{label.name}}
+                        </label>
+                    </span>
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!--商品参数-->
+<div class="enter-wrapper" data-ng-init="parameters = product.delivery.parameters">
+    <h1 class="review-title">商品参数
+        <a href="javascript:void(0)" class="parameter-btn"
+           data-ng-click="vm._addEmptyParameters(parameters)">自定义参数</a>
+    </h1>
+
+    <div class="J_parameter-box">
+        <span class="custom J_parameter-item"
+              data-ng-repeat="parameter in parameters track by $index">
+            <span data-ng-if="parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 1;">
+                <label class="J_key" data-required="{{parameter.required}}">
+                    <em class="star" data-ng-if="+parameter.required">*</em>{{parameter.ppName}}：
+                </label>
+                <input type="text" class="J_val" data-ng-model="parameter.pvName" ng-trim="true">
+            </span>
+            <span class="custom edit"
+                  data-ng-if="!parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 0">
+                <input type="text" class="J_key" placeholder="自定义参数"  data-required="0" data-ng-model="parameter.ppName">：
+                <input type="text" class="J_val" placeholder="自定义参数值"  data-ng-model="parameter.pvName" ng-trim="true">
+                <a href="javascript:void(0)" class="x"
+                   data-ng-click="vm._removeParameters(parameters, $index)">X</a>
+            </span>
+        </span>
+    </div>
+</div>
+
+<!--商品详情-->
+<div class="enter-wrapper mb30">
+    <h1 class="review-title">商品详情</h1>
+    <div class="editor">
+        <textarea cols="30" rows="10" data-ng-model="product.delivery.detailDesc"></textarea>
+    </div>
+</div>
+
+<div class="clearfix">
+    <button class="btn btn-success mr5 fr" type="button">预览</button>
+    <button class="btn btn-primary mr5 fr" type="submit" data-ng-click="vm._saveDelivery()">保存商品</button>
+</div>
+
+<popup ng-if="similarProducts.open" for="btn-similarProducts" close="similarProducts.open=false" close-action="esc timeout outerchick">
+    <div class="easyDialog_wrapper" data-ng-init="grpProducts = product.delivery.grpProducts;">
+        <div class="easyDialog_content">
+            <h4 class="easyDialog_title dialog-title">
+                <a id="closeBtn" class="close_btn" title="关闭窗口" href="javascript:void(0)" data-ng-click="similarProducts.open=false">×</a>相同编码组商品
+            </h4>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th data-ng-repeat="product in grpProducts[0].specifications">{{product.ppName}}</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr data-ng-repeat="product in grpProducts">
+                    <td data-ng-repeat="specification in product.specifications" ng-class="{0: '', 1: 'pro-type'}">
+                        {{specification.pvName}}
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</popup>
+
+<popup ng-if="codeInfo.open" for="btn-codeInfo" close="codeInfo.open=false" close-action="esc timeout outerchick">
+    <div class="easyDialog_wrapper">
+        <div class="easyDialog_content">
+            <h4 class="easyDialog_title">
+                <a class="close_btn" title="关闭窗口" href="javascript:void(0)" data-ng-click="codeInfo.open=false">×</a>提示
+            </h4>
+            <div class="look2-content">
+                规格组编码作用：<br/>
+                因创建商品时，商品只允许添加一个规格，通过把规格组编码设置为相同的方式，把商品的多个规格呈现在一个商品详情页。
+                只要各商品的规格组编码一致，就能在同一个商品详情页展示。
+            </div>
+        </div>
+    </div>
+</popup>
+

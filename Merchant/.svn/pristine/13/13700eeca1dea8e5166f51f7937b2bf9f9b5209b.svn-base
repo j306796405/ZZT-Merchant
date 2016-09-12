@@ -1,0 +1,140 @@
+{
+  "pcCode": "5556058",
+  "name": "护膝",
+  "parentCode": "5556",
+  "parentName": "篮球服装",
+  "upperCode": "55",
+  "upperName": "运动",
+  "level": 3,
+  "specifications": [
+    {
+      "ppId": 20,
+      "name": "颜色",
+      "prptype": "2",
+      "multiSelect": "0",
+      "showName": "颜色",
+      "orders": 1,
+      "required": "0",
+      "values": [
+        {
+          "pvid": "229",
+          "name": "白色"
+        },
+        {
+          "pvid": "230",
+          "name": "黄色"
+        },
+        {
+          "pvid": "231",
+          "name": "蓝色"
+        },
+        {
+          "pvid": "232",
+          "name": "黑色"
+        },
+        {
+          "pvid": "233",
+          "name": "紫色"
+        },
+        {
+          "pvid": "236",
+          "name": "红色"
+        },
+        {
+          "pvid": "237",
+          "name": "橘色"
+        },
+        {
+          "pvid": "238",
+          "name": "淡绿色"
+        },
+        {
+          "pvid": "239",
+          "name": "粉红色"
+        },
+        {
+          "pvid": "240",
+          "name": "深蓝色"
+        }
+      ]
+    },{
+      "ppId": 21,
+      "name": "尺寸",
+      "prptype": "2",
+      "multiSelect": "0",
+      "showName": "尺寸",
+      "orders": 2,
+      "required": "0",
+      "values": [
+        {
+          "pvid": "228",
+          "name": "S"
+        },
+        {
+          "pvid": "229",
+          "name": "M"
+        },
+        {
+          "pvid": "230",
+          "name": "L"
+        },
+        {
+          "pvid": "231",
+          "name": "XL"
+        },
+        {
+          "pvid": "232",
+          "name": "XXL"
+        }
+      ]
+    }
+  ],
+  "attributes": [
+    {
+      "ppId": 17,
+      "name": "厚度",
+      "prptype": "0",
+      "multiSelect": "0",
+      "showName": "厚度",
+      "orders": 1,
+      "required": "1",
+      "values": [
+        {
+          "pvid": "92",
+          "name": "长牙"
+        },
+        {
+          "pvid": "94",
+          "name": "长"
+        },
+        {
+          "pvid": "98",
+          "name": "撒"
+        }
+  ],
+  "parameters": [
+    {
+      "ppId": 24,
+      "name": "长度",
+      "prptype": "1",
+      "multiSelect": "1",
+      "showName": "长度",
+      "orders": 1,
+      "required": "1",
+      "values": [
+        {
+          "pvid": "92",
+          "name": "长牙"
+        },
+        {
+          "pvid": "94",
+          "name": "长"
+        },
+        {
+          "pvid": "98",
+          "name": "撒"
+        }
+      ]
+    }
+  ]
+}

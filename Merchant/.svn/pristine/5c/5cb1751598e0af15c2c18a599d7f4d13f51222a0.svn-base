@@ -1,0 +1,183 @@
+<div data-ng-controller="product.publish.MainController as vm">
+    <h1 class="channel-title">
+        <b>发布销售商品</b><a href="商品审核记录.html">商品审核记录</a>
+        <span>
+            <button class="btn btn-primary mr5" type="button" data-ng-click="vm.save()">保存商品</button>
+            <button class="btn btn-success mr5" type="button">预览</button>
+        </span>
+    </h1>
+
+    <div class="panel">
+
+        <div class="panel-body whitebg pd20">
+            <div class="panel-heading navy-blue">
+                <ul class="tabnav nav-tabs">
+                    <li class="active">
+                        <a data-toggle="tab" href="javascript:">商品基础信息</a>
+                    </li>
+                    <li>
+                        <a data-toggle="tab" href="javascript:">商品价格/库存/渠道</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane active">
+                    <div class="enter-wrapper">
+                        <h1 class="review-title">商品是否已入喆兔仓？
+                            <span class="hint">（商品保存后将无法修改是否入仓选项）<em class="star">*</em></span>
+                        </h1>
+                        <label class="check-label mr15">
+                            <input type="radio" class="table-check check-element mr5" data-ng-model="isDelivery"
+                                   value="1" ng-click="vm.isDelivery()">
+                            是
+                        </label>
+                        <label class="check-label mr15">
+                            <input type="radio" class="table-check check-element mr5" data-ng-model="isDelivery"
+                                   value="0" ng-click="vm.isDelivery()">
+                            否
+                        </label>
+                    </div>
+                    <div ui-view></div>
+                </div>
+                <div class="tab-pane ">
+                    <div class="channel1">
+                        <h1 class="review-title">商品价格/库存<a class="channel-link" rel="0" href="javascript:void(0)">分渠道设置价格/库存</a>
+                        </h1>
+                        <h4 class="sub-title">统一设置库存/价格</h4>
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>市场价（元）</th>
+                                <th>销售价（元）</th>
+                                <th>销售库存</th>
+                                <th>限购数量</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <h4 class="sub-title">已关联的采购商品 采购价 / 库存数量</h4>
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th class="channel-name">采购商品名称</th>
+                                <th>采购商品ID</th>
+                                <th>采购价（元）</th>
+                                <th>剩余库存</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="channel2">
+                        <h1 class="review-title">商品价格/库存<a rel="1" class="channel-link" href="javascript:void(0)">统一设置库存/价格</a>
+                        </h1>
+                        <h4 class="sub-title">分渠道设置库存/价格</h4>
+                        <div>
+                            <label class="mr20">
+                                <input type="checkbox" class="table-check check-element mr5">喆喆兔-PC
+                            </label>
+                            <label class="mr20">
+                                <input type="checkbox" class="table-check check-element mr5">喆喆兔-APP
+                            </label>
+                            <label class="mr20">
+                                <input type="checkbox" class="table-check check-element mr5">喆喆兔-MOBILE
+                            </label>
+                        </div>
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th class="channel-name">渠道</th>
+                                <th>市场价（元）</th>
+                                <th>售价（元）</th>
+                                <th>渠道库存</th>
+                                <th>限购（0为不限购）</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="channel-name">喆喆兔-PC</td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name">喆喆兔-APP</td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name">喆喆兔-MOBILE</td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                                <td><input type="text"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <p class="hint">（提示：分渠道设置库存后，各渠道之间的库存是独立的。）</p>
+                        <h4 class="sub-title">已关联的采购商品 采购价 / 库存数量</h4>
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th class="channel-name">采购商品名称</th>
+                                <th>采购商品ID</th>
+                                <th>采购价（元）</th>
+                                <th>剩余库存</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            <tr>
+                                <td class="channel-name red">他美Apatmil 奶粉1段</td>
+                                <td>AA001 / 杭州仓</td>
+                                <td>100.00</td>
+                                <td>25</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

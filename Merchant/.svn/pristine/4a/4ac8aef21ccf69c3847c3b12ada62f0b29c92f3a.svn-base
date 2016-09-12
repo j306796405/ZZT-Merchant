@@ -1,0 +1,25 @@
+/**!
+ * delivery.purchase.create
+ * @author jianglj
+ * @create 2016-05-06 14:16
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.DeliveryPurchaseCopyController', deliveryPurchaseCopyController)
+
+    deliveryPurchaseCopyController.$inject = [
+        '$controller',
+        '$state',
+        '$scope',
+        '$filter',
+        'product.publish.publishService',
+        'comp.notification.notificationService'
+    ];
+    function deliveryPurchaseCopyController($controller, $state, $scope, $filter, publishService, notificationService) {
+        
+    }
+
+})();

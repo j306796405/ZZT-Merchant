@@ -1,0 +1,135 @@
+/***
+ * 订单列表查询页面控制器
+ * @author xiaodong.liu
+ * @date 2016-04-25
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.order')
+        .controller('order.list.DetailController', DetailController);
+
+    DetailController.$inject = [
+        '$timeout',
+        '$state',
+        '$scope',
+        'ngDialog',
+        'comp.notification.notificationService',
+        'comp.session.sessionService'
+    ];
+    function DetailController($timeout, $state, $scope, ngDialog,notificationService, sessionService) {
+        var vm = this;
+        $scope.queryCondition = {
+            startTime: '',
+            endTime: '',
+            warehouse: '',
+            name: ''
+        }
+
+        $scope.delivery = {
+            logisticCompany: {"id":'',"name":''},
+            logisticNo: '1111'
+        };
+
+        $scope.logisticCompanies=[{"id":'1',"name":'11111'},{"id":'222',"name":'22222'}];
+       // $scope.logisticCompanies.unshift({"id":'',"name":'请选择'});
+        $scope.query = queryFunc;
+        function queryFunc() {
+            /* beginTimeStr
+             string	下单开始时间	否	yyyy-MM-dd
+             endTimeStr
+             string	下单结束时间	否	yyyy-MM-dd
+             soCode
+             string 	订单编号	否
+             isWarehose
+             string  	是否入库	 否
+             sState	string	状态	 否*/
+            $scope.data =
+                {
+                    "total": {
+                        "totalSettleAmount": 1000,//商品总金额（结算金额)
+                        "taxAmount": 1500,//税额
+                        "activityAmount": 1500,//税额
+                        "incomeWallet": 20,//余额
+                        "incomeFreight": 0,//运费
+                        "incomeAmount": 110, //实付款
+                        "incomeCoupon": 110  //优惠券
+                    },
+                    "subOrder": {
+                        "moCode": "0000000000001",
+                        "createTime": "2015-11-11 11:11:11",
+                        "state":"2",
+                        "stateName": "已经发货",
+                        "instName": "支付宝",
+                        "loginId": "13913534556",
+                        "effectTime": "2015-11-12 11:11:11",
+                        "deliverTime": "2015-11-13 11:11:11",
+                        "completeTime": "2015-11-14 11:11:11",
+                        "customerMemo": "快点发货",
+                        "customerAddress": "王晓磊 131****1261 上海市上海市浦东新区济阳一村－济阳路95弄45号101室"
+                    },
+                    "itemList": [
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛粪牛粪牛粪牛粪牛粪牛粪22",
+                            "specifications": [{"name": "颜色", "value": "黄色"},
+                                {"name": "尺寸", "value": "S"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        }
+                    ],
+                    "logistics": {
+                        "logisticsName": "ZTO",
+                        "logisticsNote": "0000000000000001",
+                        "data": [
+                            {
+                                "time": "2015-11-11 10:10:10",
+                                "context": "开始装货"
+                            },
+                            {
+                                "time": "2015-11-12 10:20:10",
+                                "context": "到达上海"
+                            },
+                            {
+                                "time": "2015-11-13 10:10:10",
+                                "context": "已签收"
+                            }
+                        ]
+                    }
+                };
+            console.log("data=" + $scope.data);
+
+        }
+        $scope.query();
+        $scope.goToOrderMain = goToOrderMainFunc;
+        /***
+         * 跳转到订单详情页面
+         */
+        function goToOrderMainFunc() {
+            $state.go('xcore.order_list');
+        }
+
+        /***
+         *  打开发货框
+         * @type {openDeliveryDialogFunc}
+         */
+        $scope.openDeliveryDialog = openDeliveryDialogFunc;
+        function openDeliveryDialogFunc() {
+            ngDialog.openConfirm({
+                template: 'deliveryDialogId',
+                className: 'ngdialog-theme-default'
+            }).then(function () {
+
+                console.log("logisticNo="+$("#logisticNo").val()+",delivery="+$("#logisticCompany").val());
+            }, function () {
+
+            });
+        }
+
+
+    }
+
+})
+();

@@ -1,0 +1,47 @@
+<div data-ng-controller="product.publish.MainController as vm">
+    <h1 class="channel-title">
+        <b>发布销售商品</b><a href="商品审核记录.html" target="_blank">商品审核记录</a>
+    </h1>
+    <div class="panel" ng-tabs>
+        <div class="panel-body whitebg pd20">
+            <div class="panel-heading navy-blue">
+                <ul class="tabnav nav-tabs" data-ng-init="tabs.index = 1; status = product.status">
+                    <li ng-tab-head>
+                        <a href="javascript:;" ng-click="tabFunc._goProduct()">商品基础信息</a>
+                    </li>
+                    <li ng-tab-head data-ng-hide="(status.isCreate === 1 || status.isCreate === 3) && status.isSave === false">
+                        <a href="javascript:;" ng-click="tabFunc._goPurchase()">商品价格/库存/渠道</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-pane" ng-tab-body="">
+                    <div class="enter-wrapper">
+                        <h1 class="review-title">商品是否已入喆兔仓？
+                            <span class="hint">（商品保存后将无法修改是否入仓选项）<em class="star">*</em></span>
+                        </h1>
+                        <label class="check-label mr15">
+                            <input type="radio" name="isDelivery" class="table-check check-element mr5"
+                                   ng-value="true" ng-click="vm._isDelivery(product.status.isDelivery, true)"
+                                   ng-disabled="product.status.isCreate != 1"
+                                   data-ng-checked="product.status.isDelivery">
+                            是
+                        </label>
+                        <label class="check-label mr15">
+                            <input type="radio" name="isDelivery" class="table-check check-element mr5"
+                                   ng-value="false" ng-click="vm._isDelivery(product.status.isDelivery, false)"
+                                   ng-disabled="product.status.isCreate != 1"
+                                   data-ng-checked="product.status.isDelivery === false ? true : false">
+                            否
+                        </label>
+                    </div>
+                    <div ui-view=""></div>
+                </div>
+                <div class="tab-pane" ng-tab-body="">
+                    <div ui-view="purchase"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+</div>

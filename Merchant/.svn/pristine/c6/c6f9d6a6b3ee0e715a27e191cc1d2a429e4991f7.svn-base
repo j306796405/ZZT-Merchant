@@ -1,0 +1,200 @@
+/***
+ * 订单列表查询页面控制器
+ * @author xiaodong.liu
+ * @date 2016-04-25
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.order')
+        .controller('order.list.ListController', ListController);
+
+    ListController.$inject = [
+        '$timeout',
+        '$controller',
+        '$state',
+        '$scope',
+        'order.list.listService',
+        'comp.notification.notificationService',
+        'comp.session.sessionService'
+    ];
+    function ListController($timeout, $controller,$state, $scope, listService,notificationService, sessionService) {
+        var vm = this;
+        $scope.filter = {
+            startTime: '',
+            endTime: '',
+            warehouse: '',
+            name: '',
+        };
+        $scope.reset = function () {
+            $scope.filter = {
+                startTime: '',
+                endTime: '',
+                warehouse: '',
+                name: '',
+            };
+        };
+        $scope.panes = [{
+            title: '全部',
+            total: '0',
+            value: ''
+        }, {
+            title: '待付款',
+            total: '10',
+            value: ''
+        }, {
+            title: '待发货',
+            total: '10',
+            value: ''
+        }, {
+            title: '已发货',
+            total: '10',
+            value: ''
+        }, {
+            title: '待付款',
+            total: '10',
+            value: ''
+        }, {
+            title: '已完成',
+            total: '10',
+            value: ''
+        }, {
+            title: '已关闭',
+            total: '10',
+            value: ''
+        }];
+
+        $scope.query = queryFunc;
+        $controller('comp.ext.controller.PaginationDataGridController', {$scope: $scope});
+        /** 实现 PaginationDataGridController 的抽象方法 */
+        $scope.getCollection = queryFunc;
+        function queryFunc() {
+            /* beginTimeStr
+             string	下单开始时间	否	yyyy-MM-dd
+             endTimeStr
+             string	下单结束时间	否	yyyy-MM-dd
+             soCode
+             string 	订单编号	否
+             isWarehose
+             string  	是否入库	 否
+             sState	string	状态	 否*/
+            $scope.data = [
+                {
+                    "loginid": "13913534556",
+                    "totalSettleAmount": 1000,
+                    "soCode": "0000000000001",
+                    "createTime": "2015-11-11 11:11:11",
+                    "state": "1",
+                    "itemList": [
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛奶11111",
+                            "specifications": [{"name": "颜色", "value": "红色"},
+                                {"name": "尺寸", "value": "M"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        },
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛粪牛粪牛粪牛粪牛粪牛粪",
+                            "specifications": [{"name": "颜色", "value": "黄色"},
+                                {"name": "尺寸", "value": "S"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        }
+                    ]
+                }, {
+                    "loginid": "13913534556",
+                    "totalSettleAmount": 1000,
+                    "soCode": "0000000000221",
+                    "createTime": "2015-11-11 11:11:11",
+                    "state": "1",
+                    "itemList": [
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛奶222",
+                            "specifications": [{"name": "颜色", "value": "红色"},
+                                {"name": "尺寸", "value": "M"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        },
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛粪牛粪牛粪牛粪牛粪牛粪22",
+                            "specifications": [{"name": "颜色", "value": "黄色"},
+                                {"name": "尺寸", "value": "S"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        },
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛粪牛粪牛粪牛粪牛粪牛粪22",
+                            "specifications": [{"name": "颜色", "value": "黄色"},
+                                {"name": "尺寸", "value": "S"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        },
+                        {
+                            "picUrl": "merchant/milk.png",
+                            "pName": "牛粪牛粪牛粪牛粪牛粪牛粪22",
+                            "specifications": [{"name": "颜色", "value": "黄色"},
+                                {"name": "尺寸", "value": "S"}],
+                            "taxRate": "15%",
+                            "settleAmount": 100,
+                            "rawQuantity": 3
+                        }
+                    ]
+                }
+            ];
+            console.log("data=" + $scope.data);
+            var qc = $scope.filter;
+            listService.queryList({
+                    beginTimeStr: qc.startTime,
+                    endTimeStr: qc.endTime,
+                    isWarehouse: qc.warehouse,
+                    sState: qc.state
+                }
+            ).then(
+                function (response) {
+                    $scope.data = response.data;
+                    console.log("response=" + response.headers['x-total-count']);
+                    return {
+                        total_count: response.headers['x-total-count'],
+                        collection: response.data
+                    };
+                },
+                function (errMessage) {
+                    notificationService.notify('失败', errMessage);
+                }
+            );
+
+
+        }
+
+        $scope.goToOrderDetail = goToOrderDetailFunc;
+        /***
+         * 跳转到订单详情页面
+         */
+        function goToOrderDetailFunc() {
+            $state.go('xcore.order_list.detail');
+        }
+
+        $scope.queryDetail = queryDetailFunc;
+        /***
+         * 查询订单详情
+         */
+        function queryDetailFunc() {
+
+        }
+
+
+    }
+
+})
+();

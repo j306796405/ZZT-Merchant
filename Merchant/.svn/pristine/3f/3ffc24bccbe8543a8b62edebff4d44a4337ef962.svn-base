@@ -1,0 +1,95 @@
+/**!
+ * main.controller.js
+ * @author jianglj
+ * @create 2016-04-18 11:11
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.MainController', mainController)
+
+    mainController.$inject = [
+        '$state',
+        '$scope',
+        'delivery.urls',
+        'product.publish.publishService',
+        'comp.notification.notificationService'
+    ];
+    function mainController($state, $scope, deliveryUrls, publishService, notificationService) {
+        var vm = this,
+            createUrls = deliveryUrls.create,
+            detailUrls = deliveryUrls.detail,
+
+            PRODUCT_DETAIL = detailUrls.detail,
+        //查询销售商品的关联采购商品信息
+            PURCHASE = createUrls.purchase,
+        //查询销售商品的关联采购商品详情信息
+            PURCHASE_DETAIL = detailUrls.purchase;
+
+        $scope.urls = {
+            PURCHASE: '',
+            PURCHASE_DETAIL: '',
+            CHANNELS: ''
+        }
+
+        $scope.product = {
+            psCode: '',
+            _setPsCode: function(psCode){
+                this.psCode = psCode;
+            },
+            delivery: {},
+            purchase: {},
+            status: {
+                //产品是否创建
+                isCreate: false,
+                //是否是入仓
+                isDelivery: true
+            },
+            _changeProductStatus: _changeProductStatus
+        }
+        
+        //判断入仓还是不入仓 来加载对应state
+        vm._isDelivery = _isDelivery;
+
+        function _changeProductStatus(isCreate, isDelivery, isSave){
+            this.isCreate = isCreate;
+            this.isDelivery = isDelivery;
+            if(isDelivery){
+                $scope.urls.PURCHASE_DETAIL = detailUrls.purchase;
+            }else{
+                $scope.urls.PURCHASE_DETAIL = '';
+            }
+        }
+
+        $scope.tabs = {
+            //默认选中第一个tab
+            index: 1,
+            //点击商品信息tab
+            _goInfo: _goInfo
+        }
+
+        function _goInfo(){
+            publishService
+                .getDeliveryDetail(PRODUCT_DETAIL, {psCode: $scope.product.psCode}, null)
+                .then(function (product) {
+                    $state.go('xcore.product_publish.delivery_edit', {
+                        data: product
+                    });
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                });
+        }
+
+        function _isDelivery(isDelivery) {
+            if (isDelivery) {
+                $state.go('xcore.product_publish.delivery');
+            }else{
+                $state.go('xcore.product_publish.notDelivery');
+            }
+        }
+        
+    }
+
+})();

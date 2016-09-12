@@ -1,0 +1,26 @@
+<div class="enter-wrapper" data-ng-init="pics = vm.pics">
+    <h1 class="review-title">商品图片</h1>
+    <ul class="pic-list">
+        <li class="rel" ng-repeat="pic in pics">
+            <a class="cancel" href="javascript:void(0)" ng-click="vm._removePic(pics, $index)">
+                <img alt="" src="app/img/cancel.png">
+            </a>
+            <a class="sort sort-l" href="javascript:void(0)"
+               data-ng-click="vm.moveLeft(pics, $index)"></a>
+            <a class="sort sort-r" href="javascript:void(0)"
+               data-ng-click="vm.moveRight(pics, $index)"></a>
+            <img width="100" height="100" alt="" ng-src="{{vm.PICS + pic}}">
+        </li>
+        <li class="rel" ng-repeat="item in vm.uploader.queue">
+            <div class="canvas" ng-if="vm.controller.isImage(item._file)">
+                <div xc-ng-thumb="{ file: item._file, width: 100 }"></div>
+            </div>
+        </li>
+        <li class="pic-add rel">
+            <input class="file" type="file" nv-file-select="" uploader="vm.uploader" multiple/>
+            <a href="javascript:void(0)">
+            </a>
+        </li>
+    </ul>
+    <p class="hint">上传图片最大500K；长宽为1:1(正方形)；最多可上传8张，最少须上传1张</p>
+</div>

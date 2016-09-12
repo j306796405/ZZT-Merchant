@@ -1,0 +1,225 @@
+<div class="enter-wrapper"  data-ng-init="purchaseProducts = product.purchaseProducts">
+    <h1 class="review-title">关联采购商品</h1>
+    <div class="related-pro">
+        <ul>
+            <li ng-repeat="item in purchaseProducts" class="mb30 J_purchaseProduct" data-ng-init="item.pprIds = [];">
+                <select class="select-tab mr5" data-ng-model="vm.filterBy[$index]" data-ng-init="vm.filterBy[$index] = vm.filterBySelect[0].id"
+                        ng-options="x.id as x.name for x in vm.filterBySelect"></select>
+                <span data-ng-if="vm.filterBy[$index] == 'name'" class="autocomplete_box">
+                    <div id="{{$index}}" focus-in="_focusIn()" angucomplete-alt placeholder="按商品名称查询" maxlength="50"
+                         pause="100"
+                         selected-object="vm._selectAutoComplete"
+                         remote-url="{{vm.MERCHANT}}/merchant/purchase-products/list"
+                         remote-url-request-formatter="vm._remoteUrlRequestByName"
+                         search-fields="name" title-field="name" minlength="1"
+                         input-class="related-input inline-block mr5" match-class="highlight"/>
+                </span>
+                <span data-ng-if="vm.filterBy[$index] == 'SKU'" class="autocomplete_box">
+                    <div id="{{$index}}" angucomplete-alt placeholder="按采购SKU号查询" maxlength="50" pause="100"
+                         selected-object="vm._selectAutoComplete"
+                         remote-url="{{vm.MERCHANT}}/merchant/purchase-products/list"
+                         remote-url-request-formatter="vm._remoteUrlRequestBySKU"
+                         search-fields="name" title-field="name" minlength="1"
+                         input-class="related-input inline-block mr5" match-class="highlight"/>
+                </span>
+
+                <button type="button" class="btn btn-primary btn-sm J_relate-product"
+                        data-ng-click="vm._selectProduct($event, item)">关联
+                </button>
+                <span class="hint">（请从查询列表中选中需要关联的采购商品，再点击关联按钮进行关联）</span>
+                <p class="reduce">
+                    <label class="select-label">
+                        <em class="star">*</em>库存扣减数量：<input type="text" data-ng-model="item.nums" disabled>
+                    </label>
+                </p>
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th class="channel-name">采购商品名称</th>
+                        <th>采购商品ID</th>
+                        <th>仓库</th>
+                        <th>采购价</th>
+                        <th>剩余库存</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr
+                            data-ng-repeat="product in item.batchProducts"
+                            data-ng-init="item.pprIds[$index] = product.pprId">
+                        <td class="channel-name red">{{product.name}}</td>
+                        <td>{{product.pprId}}</td>
+                        <td>{{product.warehouse}}</td>
+                        <td>{{product.buyPrice}}</td>
+                        <td>{{product.inventory}}</td>
+                        <td><a href="javascript:;" class="btn btn-warning btn-sm J_unlink_btn"
+                               data-ng-if="!product.isDisabled"
+                               data-ng-click="vm._unlinkProduct($event, item, product)">取消关联{{product.disabled}}</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+                <label class="check-label">
+                    <input type="radio" class="table-check check-element mr5" name="isMain"
+                           data-ng-model="item.isMain" ng-value="1" disabled>
+                    选择此采购商品的分类作为销售分类
+                </label>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="enter-wrapper" data-ng-init="info = product.info">
+    <h1 class="review-title">商品基本信息</h1>
+    <div class="pro-msg">
+        <p class="mt20">
+            <label>
+                商品分类：
+                {{info.pcFirstName}} > {{info.pcSecondName}} > {{info.pcThirdName}}
+            </label>
+        </p>
+        <p class="mt20">
+            <label>
+                品牌名称：
+                {{info.brandName}}
+            </label>
+        </p>
+        <p class="mt20">
+            <label>商品名称：
+                <input type="text" data-ng-model="info.name">
+            </label>
+        </p>
+
+        <p class="mt20">
+            <label class="desc-label long">
+                商品卖点：
+                <textarea data-ng-model="info.summary"></textarea>
+            </label>
+        </p>
+
+        <p>
+            <label>商品编号：
+                <span>{{info.psCode}}</span>
+            </label>
+        </p>
+    </div>
+</div>
+
+<div class="enter-wrapper" data-ng-init="pics = product.pics;">
+    <h1 class="review-title">商品图片</h1>
+    <ul class="pic-list">
+        <li class="rel" ng-repeat="pic in pics">
+            <a class="cancel" href="javascript:void(0)" ng-click="vm._removePic(pics, $index)">
+                <img alt="" src="app/img/cancel.png">
+            </a>
+            <a class="sort sort-l" href="javascript:void(0)"
+               data-ng-click="vm.moveLeft(vm.uploader.queue, $index)"></a>
+            <a class="sort sort-r" href="javascript:void(0)"
+               data-ng-click="vm.moveRight(vm.uploader.queue, $index)"></a>
+            <img width="100" height="100" alt="" ng-src="{{vm.PICS + pic}}">
+        </li>
+        <li class="rel" ng-repeat="item in vm.uploader.queue">
+            <div class="canvas" ng-if="vm.controller.isImage(item._file)">
+                <div xc-ng-thumb="{ file: item._file, width: 100 }"></div>
+            </div>
+        </li>
+        <li class="pic-add rel">
+            <input class="file" type="file" nv-file-select="" uploader="vm.uploader" multiple/>
+            <a href="javascript:void(0)">
+            </a>
+        </li>
+    </ul>
+    <p class="hint">上传图片最大500K；长宽为1:1(正方形)；最多可上传8张，最少须上传1张</p>
+</div>
+
+<div class="enter-wrapper" data-ng-init="properties = product.properties;">
+    <h1 class="review-title">商品属性</h1>
+    <div class="pro-property-wrap">
+        <ul class="pro-property-box clearfix" ng-repeat="group in properties">
+            <li ng-show="($parent.$index % 3 == 0) && ($parent.$index + 3 > $index) && ($parent.$index <= $index)" ng-repeat="propertie in properties">
+                <!-- 0:单选 1:输入  2:多选 -->
+                <!--单选-->
+                <span data-ng-if="propertie.multiSelect == 0"
+                      data-ng-init="propertie.isText = 0; product.properties[$index].pvObjectsTemp = [];">
+                    <label class="key" data-required="{{propertie.required}}">
+                        <em class="star" data-ng-if="+propertie.required">*</em>{{propertie.ppName}}：
+                    </label>
+                    <select class="form-ele"
+                            ng-options = "option.pvName for option in propertie.pvObjects"
+                            ng-model = "product.properties[$index].pvObjectsTemp[0]"
+                            ng-init = "product.properties[$index].pvObjectsTemp[0] = (propertie.pvObjects | selected)">
+                        <option value="">请选择</option>
+                    </select>
+
+                    </form>
+                </span>
+                <!--文本输入框-->
+                <span
+                        data-ng-if="propertie.multiSelect == 1"
+                        data-ng-init="propertie.isText = 1; propertie.pvObjectsTemp = []; propertie.pvObjectsTemp[0] = propertie.pvObjects[0];">
+                    <label class="key" data-required="{{propertie.required}}">
+                        <em class="star" data-ng-if="+propertie.required">*</em>{{propertie.ppName}}：
+                    </label>
+                    <input type="text" class="form-ele input"
+                           ng-trim="true"
+                           data-ng-model="propertie.pvObjectsTemp[0].pvName"
+                           value="propertie.pvObjects[0].pvName">
+                </span>
+                <!--多选框-->
+                <span data-ng-if="propertie.multiSelect == 2"
+                      data-ng-init="propertie.isText = 0; propertie.isCheckbox = 1; propertie.pvObjectsTemp = [];">
+                    <label class="key" data-required="{{item.required}}">
+                        <em class="star" data-ng-if="+propertie.required">*</em>{{propertie.ppName}}：
+                    </label>
+                    <span class="checkgroup">
+                        <label data-ng-repeat="label in propertie.pvObjects">
+                            <input type="checkbox" class="table-check" name="{{'gourp-' + propertie.ppId}}"
+                                   ng-true-value="'{{label.pvId}}'"
+                                   ng-false-value=""
+                                   data-ng-init="vm._initCheckbox(propertie.pvObjectsTemp, label, $index)"
+                                   data-ng-checked="{{label.select}}"
+                                   data-ng-model="propertie.pvObjectsTemp[$index].pvId"
+                                   data-ng-change="vm._changeCheckbox(propertie.pvObjectsTemp[$index], propertie.pvObjectsTemp[$index].pvId, label.pvName)">
+                            {{label.pvName}}
+                        </label>
+                    </span>
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="enter-wrapper" data-ng-init="parameters = product.parameters">
+    <h1 class="review-title">商品参数
+        <a href="javascript:void(0)" class="parameter-btn"
+           data-ng-click="vm._addEmptyParameters()">自定义参数</a>
+    </h1>
+
+    <div class="J_parameter-box">
+        <span class="custom J_parameter-item"
+              data-ng-repeat="parameter in parameters track by $index">
+            <span data-ng-if="parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 1;">
+                <label class="J_key" data-required="{{parameter.required}}">
+                    <em class="star" data-ng-if="+parameter.required">*</em>{{parameter.ppName}}：
+                </label>
+                <input type="text" class="J_val" data-ng-model="parameter.pvName" ng-trim="true">
+            </span>
+            <span class="custom edit"
+                  data-ng-if="!parameter.ppId"
+                  data-ng-init="parameter.isGlobal = 0">
+                <input type="text" class="J_key" placeholder="自定义参数"  data-required="0" data-ng-model="parameter.ppName">：
+                <input type="text" class="J_val" placeholder="自定义参数值"  data-ng-model="parameter.pvName" ng-trim="true">
+                <a href="javascript:void(0)" class="x"
+                   data-ng-click="vm._removeParameters(parameters, $index)">X</a>
+            </span>
+        </span>
+    </div>
+</div>
+
+<div class="enter-wrapper mb30" data-ng-init="detailDesc = product.detailDesc;">
+    <h1 class="review-title">商品详情</h1>
+    <div class="editor">
+        <textarea cols="30" rows="10" data-ng-model="detailDesc"></textarea>
+    </div>
+</div>

@@ -1,0 +1,136 @@
+/**!
+ * delivery.purchase.create
+ * @author jianglj
+ * @create 2016-05-06 14:16
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.biz.product')
+        .controller('product.publish.detail.delivery.purchase', deliveryPurchaseDetailController)
+
+    deliveryPurchaseDetailController.$inject = [
+        '$state',
+        '$scope',
+        '$filter',
+        'product.publish.publishService',
+        'comp.notification.notificationService',
+        'delivery.urls'
+    ];
+    function deliveryPurchaseDetailController($state, $scope, $filter, publishService, notificationService, deliveryUrls) {
+        var vm = this,
+            updateUrls = deliveryUrls.update,
+        //修改入库商品统一设置库存/价格
+            UPDATE_UNIFIED = updateUrls.unified,
+        //修改入库商品分渠道设置库存/价格
+            UPDATE_MULTIPLE = updateUrls.multiple;
+
+        //全局模块是否加载
+        vm.isModuleLoad = false,
+        //统一设置库存/价格 true, 分渠道设置价格/库存 false
+        vm.isCommonSet = true;
+        vm.channels = [];
+        $scope.product.purchase = {
+            unified: {
+                marketAmount: '',
+                sellPrice: '',
+                sellNums: '',
+                limitNums: '',
+            },
+            multiple: []
+        }
+        
+        //更改渠道
+        vm._changeChannel = _changeChannel;
+        //统一设置库存/价格保存表单
+        vm._unifiedForm = _unifiedForm;
+        //分渠道设置价格/库存保存表单
+        vm._multipleForm = _multipleForm;
+
+        $scope.$on('getPurchaseData', function(e, purchase) {
+            vm.isModuleLoad = true;
+            var sellType = +purchase.sellType;
+            switch(sellType)
+            {
+                //统一设置库存/价格保存表单
+                case 0:
+                    var item = purchase.productStockPrices[0];
+                    if(item){
+                        item.sellPrice = $filter('f_money')(item.sellPrice);
+                        item.marketAmount = $filter('f_money')(item.marketAmount);
+                    }else{
+                        item = {};
+                    }
+                    $scope.product.purchase.unified = item;
+                    vm.channels = purchase.saleChannels;
+                    vm.batchProducts = purchase.batchProducts;
+                    vm.isCommonSet = true;
+                    break;
+                //分渠道设置价格/库存保存表单
+                case 1:
+                    vm.channels = purchase.saleChannels;
+                    _.each(vm.channels, function(o, i){
+                        if(+o.select){
+                            o.isChecked = true;
+                            var item = purchase.productStockPrices.shift();
+                            if(item){
+                                item.sellPrice = $filter('f_money')(item.sellPrice);
+                                item.marketAmount = $filter('f_money')(item.marketAmount);
+                            }else{
+                                item = {};
+                            }
+                            $scope.product.purchase.multiple[i] = item;
+                        }else{
+                            o.isChecked = false;
+                            $scope.product.purchase.multiple[i] = undefined;
+                        }
+                    })
+                    vm.batchProducts = purchase.batchProducts;
+                    vm.isCommonSet = false;
+                    break;
+                default:
+                    ''
+            }
+        });
+
+        function _unifiedForm(form) {
+            if (form.$invalid) {
+                return;
+            }
+            publishService
+                .updateUnified(UPDATE_UNIFIED, null, _.extend({psCode: $scope.product.psCode}, $scope.product.purchase.unified))
+                .then(function (data) {
+                    notificationService.success('成功', '更新成功');
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                })
+        }
+
+        function _multipleForm(form) {
+            if (form.$invalid) {
+                return;
+            }
+            publishService
+                .updateMultiple(UPDATE_MULTIPLE, null, _.compact($scope.product.purchase.multiple))
+                .then(function (data) {
+                    notificationService.success('成功', '更新成功');
+                }, function (errMsg) {
+                    notificationService.notify('异常', errMsg);
+                })
+        }
+
+        function _changeChannel(isChecked, multiple, channel, psCode, index) {
+            if (isChecked) {
+                multiple[index] = {
+                    scCode: channel.scCode,
+                    scName: channel.name,
+                    psCode: psCode
+                }
+            } else {
+                multiple[index] = undefined
+            }
+        }
+    }
+
+})();

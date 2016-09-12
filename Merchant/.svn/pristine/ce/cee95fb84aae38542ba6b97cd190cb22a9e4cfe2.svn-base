@@ -1,0 +1,40 @@
+/**!
+ * tab.product.directive
+ * @author jianglj
+ * @create 2016-05-03 16:20
+ */
+(function () {
+    'use strict';
+
+    angular
+        .module('xcore.comp')
+        .directive('productTabs', productTabs);
+    function productTabs() {
+        return {
+            restrict: 'E',
+            replace: true,
+            transclude: true,
+            template: '<ul ng-transclude></ul>',
+            controller: function () {
+                var tabs = [];
+                this.selected = function (selectedTab) {
+                    angular.forEach(tabs, function(tab) {
+                        if (tab != selectedTab) {
+                            tab.isActive = false;
+                        }
+                    });
+                }
+                this.addTab = function (tab) {
+                    tabs.push(tab);
+                }
+            }
+        };
+    }
+
+    angular
+        .module('xcore.comp').directive('pane', function () {
+        return {
+
+        };
+    })
+})();

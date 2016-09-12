@@ -1,0 +1,28 @@
+/***
+ * 订单-订单列表路由配置
+ */
+(function() {
+  'use strict';
+
+  angular
+    .module('xcore.biz.order')
+    .config(routerConfig);
+
+  routerConfig.$inject = [
+    '$stateProvider'
+  ];
+  function routerConfig($stateProvider) {
+
+    var basePath = 'app/business/order/list/';
+    var baseState = 'xcore.order_list.';
+    var basePackage = 'order.list.';
+
+    $stateProvider
+      .state(baseState + 'main', {
+        templateUrl: basePath + 'view/main.html',
+        controller: basePackage + 'MainController',
+        controllerAs: "vmAs"
+      })
+  }
+
+})();
